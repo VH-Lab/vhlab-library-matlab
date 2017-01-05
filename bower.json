@@ -1,0 +1,14 @@
+{
+  "name": "vhlab_matlibraries",
+  "homepage": "https://github.com/VH-Lab/vhlab_matlibraries",
+  "authors": [
+    "[Stephen D. Van Hooser] <[vanhoosr@brandeis.edu]>"
+  ],
+  "description": "VH Lab Matlab libraries; functions that manage and analyze VH lab experiments that are less general than vhlab_toolbox",
+  "main": "",
+  "license": "MIT",
+  "dependencies": {
+	  "vhlab_toolbox": "git://github.com/VH-Lab/vhlab_toolbox.git"
+  }
+}
+

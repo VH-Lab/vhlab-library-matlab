@@ -1,0 +1,10 @@
+
+
+
+
+
+[R,HINT,LOWERB,UPPERB,IMs,roipts]=analyzeintrinsicori('~/fitzpatrick/analysis/intrinsic/2006-10-09/Expt01',0:22.5:157.5,1:8);
+P = levmar_fit(1,xi,R,HINT,LOWERB,UPPERB,180);
+[or1,di]=intrinorivectorsum(IMs,0:22.5:180-22.5,1,1);
+D = angdiffwrap(ori1_angs(INDs(sub1))'-ori2_angs(INDs(sub1))',180);
+[Yn,Xn]=slidingwindowfunc(ori1_angs(INDs(sub2)),D,0,5,45,5,'mean');

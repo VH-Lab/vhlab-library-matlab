@@ -1,0 +1,9 @@
+
+replace this computation with singleunit_rc (which needs to be extended for color)
+
+the continuous waveform should really just be a high resolution reverse-correlation (0.1ms time scale)
+
+should have the ability to pull up a raster for the forward correlation
+
+should be able to calculate based on different features besides linear; such as "absolute value of change"
+

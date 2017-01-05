@@ -1,0 +1,34 @@
+function [meanwaves, T, indwaves] = blink_trigger(md,blinkstim,mti,t0,t1)
+
+% BLINK_TRIGGER Compute mean waveforms triggered off a blinkingstim
+% 
+% [MEANWAVE,INDWAVES]=blink_trigger(MD,BLINKSTIM,MTI,t0,t1)
+%
+%  Computes mean, standard deviation, and invidual waveforms following 
+%  presentation of frames of a blinkingstim in the interval [t0 t1] around
+%  each frame.  BLINKSTIM is the blinkingstim that was shown, and MTI is a MTI
+%  stimulus record from the stimulus presentation.
+%
+%  See also:  BLINKINGSTIM, DISPLAYSTIMSCRIPT
+
+[data,t] = get_data(md,[mti.startStopTimes(1),mti.startStopTimes(4)+t1]);
+
+dt = t(2)-t(1);
+ % assume constant sampling rate
+T = t0:dt:t1;
+
+blinkList = getgridorder(blinkstim);
+nreps = length(find(blinkList==1));
+indwaves = zeros(length(blinkList)/nreps,nreps,length(T));
+
+for n=1:length(blinkList)/nreps,  % number of grid locations
+  trigs = mti.frameTimes(find(blinkList==n));
+  for jj=1:length(trigs),
+	si = 1+round((trigs(jj)-t(1)+t0)/dt);
+    indwaves(n,jj,:) = data(si:si+length(T)-1);
+  end;
+end;
+
+meanwaves=[]; stddevwaves=[];
+meanwaves=reshape(mean(indwaves,2),length(blinkList)/nreps,length(T));
+%stddevwaves=reshape(std(indwaves,2),length(blinkList)/nreps,length(T));
