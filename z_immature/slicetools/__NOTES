@@ -1,0 +1,24 @@
+
+struct slice_landmarks
+	scale
+		imageunits
+		realunits
+	origin % imageunits
+	cell % imageunits
+	borders % list of interesting borders
+		name
+		locs % imageunits
+
+
+slice_landmarks.scale = struct('imageunits',203,'realunits',850e-6);
+slice_landmarks.origin = [175 543];
+slice_landmarks.cell = [170 318];
+slice_landmarks.borders = struct('name','top2/3','locs',[175 523]);
+slice_landmarks.borders(2) = struct('name','topdark1','locs',[175 282]);
+slice_landmarks.borders(3) = struct('name','bottomdark1','locs',[175 241]);
+slice_landmarks.borders(4) = struct('name','topdark2','locs',[175 197]);
+slice_landmarks.borders(5) = struct('name','bottomdark2','locs',[175 154]);
+slice_landmarks.borders(6) = struct('name','white2','locs',[175 116]);
+slice_landmarks.borders(7) = struct('name','bottom','locs',[175 44]);
+
+

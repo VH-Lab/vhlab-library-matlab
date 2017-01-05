@@ -1,0 +1,57 @@
+
+
+landmark
+	lmsname  - global variable with a list of parameters
+	type
+	name
+	show 0->nothing, 1->dot, 2->name only, 3->name+dot
+	data
+		custom
+	DrawOn(coordframe2drawon, use show)
+
+CoordFrameConvert
+
+
+CoordFrame
+	type
+	name
+	data
+	GetNewPoint()
+
+
+
+Next step:
+	stim sites / stim grids
+
+	actions:  analysis
+	
+
+
+how to represent stim sites / stim grids?
+
+Can do it all as a stim grid, including 1 by 1 sites.
+
+Each stimgrid will have a name
+	Each stim site within stimgrid needs some sort of reference
+	We already have a set of reference names in our old recordings
+	
+	How do we identify points to be included in a stimgrid?
+		5) User enters dimensions of grid (M spots tall by N spots wide) and clicks around the grid; sites are interpolated
+		1) User enters step size in X and Y and clicks around the grid to determine number of points
+		4) User enters step size, number of points, and clicks on the center location
+		3) User manually enters a list of locations
+		2) User clicks locations on the screen to generate a list of locations
+
+	*Option 1:
+		Label each site with a number string START and INC, go by columns then by rows
+			Then reference is grid1:1.5, e.g.
+
+	Option 2:
+		Allow user to label each site in his or her own way
+			Too complicated?  If user wants this, they can use multiple stimgrids
+
+	Drawing:
+		Black line with points marked by X's  (good for single row)
+		Line grid where centers correspond to stimulated points (good for 2 x 2 or greater)
+		
+
