@@ -9,6 +9,12 @@ function vhlab_mltbx_matlibraries_Init
   % AnalysisTools subdirectory
 measureddata([1 2],'',''); 
 spikedata([1 2],'','');
+windowdiscriminator('default');
+cksmultipleunit([1 2],'','',[1.5],[]);
+wdcluster('default');
+multiextractor('default');
+dotdiscriminator('default');
+
 
   % Legacy code
 FitzLabInit;
