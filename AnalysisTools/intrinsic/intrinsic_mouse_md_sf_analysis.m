@@ -16,6 +16,8 @@ function [outputs] = intrinsic_mouse_md_sf_analysis(base_directory, ipsihem_ipsi
 %   slope              | The slope of the best fit line of SF responses
 %   x_intercept        | The x intercept of the best fit line of SF responses
 %   y_intercept        | The y intercept of the best fit line of SF responses
+%   base_directory     | The base directory
+%   dirname            | The directory name
 %   
 %   The function's default behavior can be modified by passing
 %   name/value pairs as additional input arguments:
@@ -48,90 +50,79 @@ if verbose,
 	end;
 end;
 
-output_blank = emptystruct('condition_name','sfs','sf_responses','slope','x_intercept','y_intercept');
+output_blank = emptystruct('condition_name','sfs','sf_responses','slope','x_intercept','y_intercept','base_directory','dirname');
 
 outputs = output_blank;
 
 for i=1:length(names),
 	output_here = output_blank;
+	output_here.base_directory = base_directory;
 	output_here.condition_name = names{i};
+	output_here.dirname = dirname;
 	dirname = eval(varnames{i});
 	
+	base_image = load([base_directory filesep dirname filesep 'singlecondition' sprintf('%.4d',1) '.mat']);
+	base_image = rescale(base_image,image_scale,[0 255]);
+	figure;
+	subplot(2,2,1);
+	image(base_image);
+	axis square;
+	colormap(gray(256));
+	title([base_directory ' ' names{i} ' (' dirname ')']);
+	
+	roi_filename = [base_directory filesep dirname filesep 'roi_file.mat'];
+	background_roi_filename = [base_directory filesep dirname filesep 'background_roi_file.mat'];
+
+	if exist(roi_filename,'file') & Force_draw_new_ROI==0,
+		BW = load(roi_filename,'-mat');
+		BW = BW.BW;
+	else,
+		msgbox(['Please draw an ROI in the responsive area; double click when done.']);
+		BW = roipoly;
+		save(roi_filename,'BW','-mat');
+	end;
+
+	roi_indexes = find(BW);
+
+	if exist(background_roi_filename,'file') & Force_draw_new_ROI == 0,
+		CW = load(background_roi_filename,'-mat');
+		CW = CW.CW;
+	else,
+		msgbox(['Please draw an ROI in the unresponsive background area; double click when done.']);
+		CW = roipoly;
+		save(background_roi_filename,'CW','-mat');
+	end;
+
+	background_roi_indexes = find(CW);
+
 	stimlist = load([base_directory filesep dirname filesep 'stims.mat'],'-mat');
 
+	output_here.sfs = [];
+	output_here.sf_responses = [];
+	for n=1:numStims(stimlist.saveScript),
+		stim = get(stimlist.saveScript,n);
+		if isa(stim,'periodicstim'),
+			p = getparameters(stim);
+			output_here.sfs(end+1) = p.sFrequency;
+			s = load([base_directory filesep dirname filesep 'singlecondition' sprintf('%.4d',n) '.mat']);
+			output_here.sf_responses(end+1) = Response_sign * ( mean(s(roi_indexes)) - mean(s(background_roi_indexes)) );
+		end;
+	end;
+
+	[output_here.slope,output_here.y_intercept] = quickregression(output_here.sfs, output_here.sf_responses,0.05);
+
+	output_here.x_intercept = -output_here.y_intercept / output_here.slope;
+
+	subplot(2,2,2);
+
+	plot(output_here.sfs, output_here.sf_responses,'ko');
+	ylabel('Response (dR/R)');
+	xlabel('Spatial frequency');
+
+	hold on;
+	plot([0.01 1],[0.01 1]*output_here.slope+output_here.y_intercept,'k--');
 
 	outputs(end+1) = output_here;
 end;
-
-ipsi_stims = [];
-contra_stims = [];
-
-for i=1:length(Stims_to_combine),
-	s = load([base_directory filesep ipsi_directory filesep 'singlecondition' sprintf('%.4d',Stims_to_combine(i)) '.mat']);
-	ipsi_stims = cat(3,ipsi_stims, s.imgsc);
-	s = load([base_directory filesep contra_directory filesep 'singlecondition' sprintf('%.4d',Stims_to_combine(i)) '.mat']);
-	contra_stims = cat(3, contra_stims, s.imgsc);
-end;
-
-ipsi_stim = mean(ipsi_stims,3);
-ipsi_stim_image = rescale(ipsi_stim,image_scale,[0 255]);
-contra_stim = mean(contra_stims,3);
-contra_stim_image = rescale(contra_stim,image_scale,[0 255]);
-
-figure;
-subplot(2,2,1);
-image(ipsi_stim_image);
-colormap(gray(256));
-title('IPSI image');
-
-subplot(2,2,2);
-image(contra_stim_image);
-colormap(gray(256));
-title('CONTRA image');
-
-ipsi_roi_filename = [base_directory filesep ipsi_directory filesep 'ipsi_roi_file.mat'];
-ipsi_no_resp_filename = [base_directory filesep ipsi_directory filesep 'ipsi_no_resp_file.mat'];
-contra_no_resp_filename = [base_directory filesep contra_directory filesep 'contra_no_resp_file.mat'];
-
-if exist(ipsi_roi_filename)==7 & Force_draw_new_ROI==0,
-	BW = load(ipsi_roi_filename,'-mat');
-	BW = BW.BW;
-else,
-	subplot(2,2,1);
-	msgbox(['Please draw an ROI in the IPSI window; double click when done']);
-	BW = roipoly;
-end;
-
-if exist(ipsi_no_resp_filename)==7 & Force_draw_new_ROI==0, %Gets unresponsive area of brain surface for ipsi stims
-	CW = load(ipsi_no_resp_filename,'-mat');
-	CW = CW.CW;
-else,
-	subplot(2,2,1);
-	msgbox(['Please draw an unresponsive ROI in the IPSI window; double click when done']);
-	CW = roipoly;
-end;
-
-if exist(contra_no_resp_filename)==7 & Force_draw_new_ROI==0, %gets unresponsive area of brain surface for contra stims
-	DW = load(contra_no_resp_filename,'-mat');
-	DW = DW.DW;
-else,
-	subplot(2,2,2);
-	msgbox(['Please draw an unresponsive ROI in the CONTRA window; double click when done']);
-	DW = roipoly;
-end;
-
-indexes = find(BW);
-indexes_ipsi_no_resp = find(CW);
-indexes_contra_no_resp = find(DW);
-ipsi_no_resp_mean = mean(ipsi_stim(indexes_ipsi_no_resp));
-contra_no_resp_mean = mean(contra_stim(indexes_contra_no_resp)); 
-
-
-ipsi_resp = (Response_sign) * (mean(ipsi_stim(indexes)-(ipsi_no_resp_mean))); %subtracts mean of unresp ipsi area
-contra_resp = (Response_sign) * (mean(contra_stim(indexes)-(contra_no_resp_mean))); %subracts mean of unresp contra area
-odindex = (contra_resp - ipsi_resp) / (contra_resp + ipsi_resp);
-
-outputs = var2struct('odindex','ipsi_resp','contra_resp','ipsi_no_resp_mean','contra_no_resp_mean');
-
 
 
