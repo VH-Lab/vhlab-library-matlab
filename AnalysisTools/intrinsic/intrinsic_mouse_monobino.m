@@ -11,6 +11,8 @@ function [success] = intrinsic_mouse_monobino(base_directory, ipsi_response_dir,
 %   contralateral responsize zone, and an unresponsive region in the contralateral image. These ROIs are saved to Matlab files
 %   'roi_monoV1.mat', 'roi_binoV1.mat', and 'roi_unresponsive.mat'.
 %
+%   If these files exist, then the ROI drawing is skipped unless the parameter 'Force_draw_new_ROI' is set.
+%
 %   SUCCESS is 1 if the rois were defined successfully and 0 otherwise.
 %   
 %   The function's default behavior can be modified by passing
@@ -48,7 +50,7 @@ end;
 
 need_rois = 0;
 for i=1:2,
-	if ~exist(monocular_roi_filename{i}) | ~exist(binocular_roi_filename) | ~exist(background_roi_filename,
+	if ~exist(monocular_roi_filename{i},'file') | ~exist(binocular_roi_filename{i},'file') | ~exist(background_roi_filename{i},'file'),
 		need_rois = 1;
 	end;
 end;
@@ -62,10 +64,10 @@ if need_rois | Force_draw_new_ROI,
 	colormap(gray(256));
 
 	for i=1:2,
-		base_image{i} = load([base_directory filesep dirname filesep 'singlecondition' sprintf('%.4d',stimulus_number) '.mat']);
+		base_image{i} = load([base_directory filesep dirname{i} filesep 'singlecondition' sprintf('%.4d',stimulus_number) '.mat']);
 		base_image{i} = rescale(base_image{i}.imgsc,image_scale,[0 255]);
 
-		subplot(2,2,1);
+		subplot(2,2,i);
 		image(base_image{i});
 		axis square;
 		title(title_str);
@@ -100,6 +102,8 @@ if need_rois | Force_draw_new_ROI,
 
 		for i=1:3,
 			B{i} = bwboundaries(BW_{i},8);
+			xi_{i} = B{i}{1}(:,2);
+			yi_{i} = B{i}{1}(:,1);
 
 			for j=1:2,
 				subplot(2,2,j);
@@ -117,7 +121,21 @@ if need_rois | Force_draw_new_ROI,
 
 	delete(roifig);
 
-
-	% save here  STILL NEEDED!!!!!!!!
+	for i=1:2,
+		% ipsi
+		for j=1:3,
+			BW = BW_{j};
+			xi = xi_{j};
+			yi = yi_{j};
+			if j==1,
+				save(monocular_roi_filename{i},'BW','xi','yi','-mat');
+			elseif j==2,
+				save(binocular_roi_filename{i},'BW','xi','yi','-mat');
+			elseif j==3,
+				save(background_roi_filename{i},'BW','xi','yi','-mat');
+			end;
+		end;
+	end;
 end;
 
+success = 1;
