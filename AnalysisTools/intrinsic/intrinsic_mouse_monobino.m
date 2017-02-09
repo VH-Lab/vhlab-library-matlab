@@ -70,7 +70,7 @@ if need_rois | Force_draw_new_ROI,
 		subplot(2,2,i);
 		image(base_image{i});
 		axis square;
-		title(title_str);
+		title(title_str{i});
 	end;
 
 	satisfied = 0;
@@ -116,6 +116,8 @@ if need_rois | Force_draw_new_ROI,
 		reply = input('Are you satisfied with ROIs? [Y/N]','s');
 		if strcmp(upper(strtrim(reply)),'Y'),
 			satisfied = 1;
+		else,
+			delete(h); % re-do
 		end;
 	end;
 
