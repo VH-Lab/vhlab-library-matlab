@@ -28,6 +28,7 @@ function [out] = vm_rc(ds, dirname, vm, t, varargin)
 %   step (0.001)                 |  The time window/kernel window step size (seconds) 
 %                                |     If [] is passed, then the native time resolution of T
 %                                |     is used (i.e., step = T(2) - T(1))
+%   dx (1)                       |  Spatial step size
 %   baseline_function ('median') |  The function that should be evaluated to subtract the baseline activity
 %                                |     (e.g., 'median', 'mean')
 %   DoMedFilter (1)              |  Should we filter the REV_CORR filter? (0/1)
@@ -45,6 +46,7 @@ MedFilterWidth = 3;
 baseline_function = 'median';
 stim_pres_to_include = [];
 stim_pres_to_exclude = [];
+dx = 1;
 
 assign(varargin{:});
  
