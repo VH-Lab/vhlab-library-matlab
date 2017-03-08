@@ -36,17 +36,23 @@ function [out] = vm_rc(ds, dirname, vm, t, varargin)
 %                                |    (See MEDFILT1)
 %   stim_pres_to_include ([])    |  Stimulus presentations to include ([] means all)
 %   stim_pres_to_exclude ([])    |  Stimulus presentations numbers to exclude ([] means none)
-%   
+%   contrast_transform ([])      |  Transform contrats from [a1 ... an] to [ b1 ... bn] respectively
+%                                |    Should be 2 rows of form [a1 ... an ; b1 ... bn]]
+%   normalize_xc_stimsignal (0)  |  Should we normalize the xc_stimsignal by dx and dt?
+%   normalize_revcorr (1)        |  Should we normalize the reverse correlation by dx and dt?
 
 mnt = -0.1;
 mt = 0.5;
 step = 0.001;
+dx = 1;
+baseline_function = 'median';
 DoMedFilter = 1;
 MedFilterWidth = 3;
-baseline_function = 'median';
 stim_pres_to_include = [];
 stim_pres_to_exclude = [];
-dx = 1;
+contrast_transform = [];
+normalize_revcorr = 1;
+normalize_xc_stimsignal = 0;
 
 assign(varargin{:});
  
@@ -103,6 +109,10 @@ for i=good_pres_indexes,
 	end;
 	cols = colsgray(V);
 	if min(size(cols))==1, cols = cols'; end;
+	[ct_i,ct_j] = size(contrast_transform);
+	for jj=1:cj_t,
+		cols(find(cols==contrast_transform(1,jj))) = contrast_transform(2,jj);
+	end;
 	stimoffsets = frameTimes{i}; %s.mti{i}.frameTimes;
 	baseline_start = findclosest(t,frameTimes{i}(1));       %OR findclosest(t,s.mti{i}.startStopTimes(2)-2*0);
 	baseline_end = findclosest(t,frameTimes{i}(end));       %OR findclosest(t,s.mti{i}.startStopTimes(3));
@@ -117,7 +127,7 @@ for i=good_pres_indexes,
 	%if i==1, figure; plot(xc_stimstim), end;     
 	[rev_corr_,dummy,xc_stimsignal_,xc_stimstim]=reverse_correlation_mv_stepfunc(vm(I)-baseline,t(I),kerneltimes,...
 		frameTimes{i}(:)',cols', 'dt',step,'dx',dx,'xc_stimstim',xc_stimstim,'DoMedFilter',DoMedFilter,...
-		'MedFilterWidth',MedFilterWidth);
+		'MedFilterWidth',MedFilterWidth,'normalize',normalize_revcorr,'normalize_xc_stimsignal',normalize_xc_stimsignal);
 	rev_corr = cat(3,rev_corr,rev_corr_);
 	xc_stimsignal = cat(3,xc_stimsignal,xc_stimsignal_);
 end;
@@ -127,7 +137,7 @@ avg_xcstimsignal = mean(xc_stimsignal,3);
 
 [Rinv,R] = whitening_filter_from_autocorr(xc_stimstim,length(kerneltimes));
 
-avg_xc_deconvolved = Rinv * avg_xcstimsignal / (step * 1);
+avg_xc_deconvolved = Rinv * avg_xcstimsignal / (step * dx);
 
 if DoMedFilter,
 	avg_xc_deconvolved = medfilt1(avg_xc_deconvolved, MedFilterWidth);
