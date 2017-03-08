@@ -110,7 +110,7 @@ for i=good_pres_indexes,
 	cols = colsgray(V);
 	if min(size(cols))==1, cols = cols'; end;
 	[ct_i,ct_j] = size(contrast_transform);
-	for jj=1:cj_t,
+	for jj=1:ct_j,
 		cols(find(cols==contrast_transform(1,jj))) = contrast_transform(2,jj);
 	end;
 	stimoffsets = frameTimes{i}; %s.mti{i}.frameTimes;
