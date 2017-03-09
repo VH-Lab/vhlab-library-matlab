@@ -99,6 +99,7 @@ for i=good_pres_indexes,
 	disp(['Now analyzing stim ' int2str(i) ' of ' int2str(length(do)) '.']);
 	p = getparameters(stim);
 	V = getgridvalues(stim);
+    frameTimes{i} = frameTimes{i}(1:p.N);
 	[X,Y] = getgrid(stim); % get grid dimensions
 	gridsize = [X Y];
 	% grayscale
