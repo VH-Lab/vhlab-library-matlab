@@ -64,10 +64,10 @@ end;
 if ischar(dirname),
 	s = getstimscripttimestruct(ds,dirname);
 	[s.stimscript,tempmti,inds_nottotrim] = stimscriptmtitrim(s.stimscript,s.mti,0);
-	s.mti = tpcorrectmti(s.mti,[getpathname(ds) filesep dirname filesep 'stimtimes.txt'],1); % not used
-	s.mti = s.mti(inds_nottotrim);
+	%s.mti = tpcorrectmti(s.mti,[getpathname(ds) filesep dirname filesep 'stimtimes.txt'],1); % not used
+	%s.mti = s.mti(inds_nottotrim);
 	[stimids,allstimtimes,frameTimes] = read_stimtimes_txt([getpathname(ds) filesep dirname]);
-	s.shift = -s.mti{1}.startStopTimes(2) + allstimtimes(1);
+	%s.shift = -s.mti{1}.startStopTimes(2) + allstimtimes(1);
 	% now mactime = spike2time - s.shift;
 else,
     s = dirname{1};
@@ -75,7 +75,6 @@ else,
 end;
 
 %s.shift,
-
 %t = t - s.shift;
 
 kerneltimes = mnt:step:mt;
