@@ -57,7 +57,7 @@ end;
 
 title_str = {'ipsilateral','contralateral'};
 
-roi_colors = [0 0 1; 0 0 1; 0.5 0.5 0.5];
+roi_colors = [0 0 1; 1 0 0; 0 1 0];
 
 if need_rois | Force_draw_new_ROI,
 	roifig=figure('name','Draw ROIs');

@@ -7,6 +7,8 @@ function [outputs] = intrinsic_mouse_od_analysis_v2_5(base_directory, ipsi_direc
 %   and IPSI_DIRECTORY is the name of the IPSI measurements (e.g., 't00006') and
 %   CONTRA_DIRECTORY is the name of the CONTRA measurements (e.g., 't00007').
 %
+%   CONTRA and IPSI eyes are referred to with respect to the hemisphere
+%
 %   v_2_5 adds the ability to subtract a non-responsive background area
 %
 %   OUTPUTS is a structure with the following fields:
@@ -72,11 +74,11 @@ image(contra_stim_image);
 colormap(gray(256));
 title('CONTRA image');
 
-ipsi_roi_filename = [base_directory filesep ipsi_directory filesep 'ipsi_roi_file.mat'];
-ipsi_no_resp_filename = [base_directory filesep ipsi_directory filesep 'ipsi_no_resp_file.mat'];
-contra_no_resp_filename = [base_directory filesep contra_directory filesep 'contra_no_resp_file.mat'];
+ipsi_roi_filename = [base_directory filesep ipsi_directory filesep 'odi_ipsi_roi_file.mat'];
+ipsi_no_resp_filename = [base_directory filesep ipsi_directory filesep 'odi_ipsi_no_resp_file.mat'];
+contra_no_resp_filename = [base_directory filesep contra_directory filesep 'odi_contra_no_resp_file.mat'];
 
-if exist(ipsi_roi_filename)==7 & Force_draw_new_ROI==0,
+if exist(ipsi_roi_filename,'file') & Force_draw_new_ROI==0,
 	BW = load(ipsi_roi_filename,'-mat');
 	BW = BW.BW;
 else,
@@ -85,7 +87,7 @@ else,
 	BW = roipoly;
 end;
 
-if exist(ipsi_no_resp_filename)==7 & Force_draw_new_ROI==0, %Gets unresponsive area of brain surface for ipsi stims
+if exist(ipsi_no_resp_filename,'file') & Force_draw_new_ROI==0, %Gets unresponsive area of brain surface for ipsi stims
 	CW = load(ipsi_no_resp_filename,'-mat');
 	CW = CW.CW;
 else,
@@ -94,7 +96,7 @@ else,
 	CW = roipoly;
 end;
 
-if exist(contra_no_resp_filename)==7 & Force_draw_new_ROI==0, %gets unresponsive area of brain surface for contra stims
+if exist(contra_no_resp_filename,'file') & Force_draw_new_ROI==0, %gets unresponsive area of brain surface for contra stims
 	DW = load(contra_no_resp_filename,'-mat');
 	DW = DW.DW;
 else,
@@ -102,6 +104,10 @@ else,
 	msgbox(['Please draw an unresponsive ROI in the CONTRA window; double click when done']);
 	DW = roipoly;
 end;
+
+save(ipsi_roi_filename,'BW','-mat');
+save(ipsi_no_resp_filename,'CW','-mat');
+save(contra_no_resp_filename,'DW','-mat');
 
 indexes = find(BW);
 indexes_ipsi_no_resp = find(CW);
