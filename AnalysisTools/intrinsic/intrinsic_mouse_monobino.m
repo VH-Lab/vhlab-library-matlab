@@ -96,19 +96,32 @@ if need_rois | Force_draw_new_ROI,
 
 		end;
 
-		BW_{2}(find(BW_{1})) = 0; % clear out any overlap with binocular
-		BW_{3}(find(BW_{1})) = 0; % clear out any overlap with binocular
-		BW_{3}(find(BW_{2})) = 0; % clear out any overlap with monocular
+        monocular = BW_{2}; % set monocular to be contralateral
+        monocular(find(BW_{1})) = 0; % clear out ipsilateral pixels from monocular zone
+        
+        binocular = BW_{1}.*BW_{2}; % be intersection of ipsi and contra
+        
+        unresponsive = BW_{3};
+
+        unresponsive(find(BW_{1})) = 0; % clear out any overlap with ipsilateral
+		unresponsive(find(BW_{2})) = 0; % clear out any overlap with contralateral
+
+        CW_{1} = monocular; % redefine BW_{1}
+        CW_{2} = binocular;
+        CW_{3} = unresponsive;
+        
 
 		for i=1:3,
-			B{i} = bwboundaries(BW_{i},8);
-			xi_{i} = B{i}{1}(:,2);
-			yi_{i} = B{i}{1}(:,1);
+			B{i} = bwboundaries(CW_{i},8);
 
 			for j=1:2,
 				subplot(2,2,j);
 				hold on;
-				h(end+1) = plot(xi_{i},yi_{i},'-','color',roi_colors(i,:));
+                for k=1:numel(B{i}),
+                    xi_{i} = B{i}{k}(:,2);
+                    yi_{i} = B{i}{k}(:,1);
+                    h(end+1) = plot(xi_{i},yi_{i},'-','color',roi_colors(i,:));
+                end;
 			end;
 
 		end;
@@ -126,7 +139,7 @@ if need_rois | Force_draw_new_ROI,
 	for i=1:2,
 		% ipsi
 		for j=1:3,
-			BW = BW_{j};
+			BW = CW_{j};
 			xi = xi_{j};
 			yi = yi_{j};
 			if j==1,
