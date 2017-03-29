@@ -8,7 +8,7 @@ assign(varargin{:});
 z = loadStructArray([base_directory filesep 'sf_responses.txt']);
 z = z(animal_number);
 
-Sfdat= intrinsic_mouse_md_sf_analysis2(base_directory, animal_number);
+Sfdat= intrinsic_mouse_md_sf_analysis2(base_directory, animal_number,varargin{:});
 
 
 f1 = figure;
@@ -43,9 +43,9 @@ end;
 % left eye, ALL 3 plotted along log sf
 
 
-sf_resp_info = loadStructArray([base_directory filesep 'sf_responses.txt']);
+sf_resp_info = z;
 
-ODstruct = intrinsic_mouse_od_analysis_v2_5(base_directory, sf_resp_info.CONTRAHEM_CONTRAEYE, sf_resp_info.CONTRAHEM_IPSIEYE);
+ODstruct = intrinsic_mouse_od_analysis_v2_5(base_directory, sf_resp_info.CONTRAHEM_CONTRAEYE, sf_resp_info.CONTRAHEM_IPSIEYE,varargin{:});
 f2 = figure;
 subplot(2,2,1);
 bar(ODstruct.odindex);
@@ -80,7 +80,7 @@ for i=2:4,
     
     xlabel('Spatial Frequencies');
     ylabel('Response');
-    title('');
+    title(titles{i});
     
     hold on;
 end;
