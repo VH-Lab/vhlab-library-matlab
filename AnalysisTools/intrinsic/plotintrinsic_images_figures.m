@@ -10,7 +10,6 @@ z = z(animal_number);
 
 Sfdat= intrinsic_mouse_md_sf_analysis2(base_directory, animal_number,varargin{:});
 
-
 f1 = figure;
 %this will plot all four images of both eyes, and both hemispheres
 
