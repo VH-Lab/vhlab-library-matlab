@@ -70,7 +70,7 @@ if exist(filename)==2,
 				type = 'counterphase';
 			case {'scrambled'},
 				type = 'scrambled';
-			case ('multi-dimensional','multidimensional'},
+			case {'multi-dimensional','multidimensional'},
 				type = 'multidimensional';
 			case {'constant','const'},
 				type = 'constant';
