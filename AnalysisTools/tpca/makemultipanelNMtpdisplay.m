@@ -1,7 +1,7 @@
-function result = makemultipaneltpdisplay(filename, ids, insertedimage, gain)
-% MAKEMULTIPANELTPDISPLAY - Make a multipanel 3x3 display of 2-photon single condition images
+function result = makemultipanelNMtpdisplay(filename, N, M, ids, insertedimage, gain)
+% MAKEMULTIPANELNMTPDISPLAY - Make a multipanel NxM display of 2-photon single condition images
 %
-%  RESULT = MAKEMULTIPANELTPDISPLAY(FILENAME, IDS, INSERTEDIMAGE, GAIN)
+%  RESULT = MAKEMULTIPANELNMTPDISPLAY(FILENAME, IDS, INSERTEDIMAGE, GAIN)
 %
 %  Makes a giant panel of two-photon single condition images,
 %  given the following inputs:
@@ -15,7 +15,10 @@ function result = makemultipaneltpdisplay(filename, ids, insertedimage, gain)
 %      RESULT - A single cell containing an image that is 3x the width and 3x the height of the original image, 
 %        with the panels distributed according to IDS.
 %
-%  See also: MAKEMULTIPANELNMTPDISPLAY
+%
+%  See also: MAKEMULTIPANELTPDISPLAY
+
+error('This function is not finished yet.');
 
 load(filename,'indimages','-mat');
 
@@ -29,7 +32,7 @@ while i<=length(ids),
 			if i<=length(ids),
 				if ids(i)~=-1,
 					im_(1+(j-1)*size(indimages{i},1):j*size(indimages{i},1),1+(k-1)*size(indimages{i},2):k*size(indimages{i},2))=indimages{ids(i)}*gain;
-				elseif ~eqlen(insertedimage,0),
+				else,
 					im_(1+(j-1)*size(indimages{i},1):j*size(indimages{i},1),1+(k-1)*size(indimages{i},2):k*size(indimages{i},2))=conv2(insertedimage,ones(5)/sum(sum(ones(5))),'same');
 				end;
 				%ctr(end+1,[1:2])=[median(1+(j-1)*size(indimages{i},1):j*size(indimages{i},1)) median(1+(k-1)*size(indimages{i},2):k*size(indimages{i},2))];
