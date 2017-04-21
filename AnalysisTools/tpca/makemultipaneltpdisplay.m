@@ -15,9 +15,18 @@ function result = makemultipaneltpdisplay(filename, ids, insertedimage, gain)
 %      RESULT - A single cell containing an image that is 3x the width and 3x the height of the original image, 
 %        with the panels distributed according to IDS.
 %
+%  (DEPRICATED: This function exists for backward compatibility, but
+%  MAKEMULTIPANELNMTPDISPLAY is more general and is recommended for future use.)
+%
 %  See also: MAKEMULTIPANELNMTPDISPLAY
 
 load(filename,'indimages','-mat');
+
+result = makemultipanelNMtpdisplay(filename, 3, 3, ids, insertedimage, gain);
+
+return;
+
+  % code from 2006-2008: 
 
 i = 1; r = 1;
 while i<=length(ids),
@@ -41,3 +50,4 @@ while i<=length(ids),
 	result{r} = im_;
 	r = r + 1;
 end;
+
