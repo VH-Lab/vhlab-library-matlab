@@ -17,16 +17,16 @@ function remove_associate(ds, type)
 
 changemade = 0;
 
-if isa(char,type),
+if isa(type,'char'),
 	type = {type};
 end;
 
 for i=1:length(vars),
 	if isa(vars{i},'measureddata'),
 		for j=1:length(type),
-			[a,i]=findassociate(vars{i},type{j},'','');
+			[a,ii]=findassociate(vars{i},type{j},'','');
 			if ~isempty(a),
-				vars{i} = disassociate(vars{i},i);
+				vars{i} = disassociate(vars{i},ii);
 				changesmade = 1;
 			end;
 		end;
