@@ -51,7 +51,7 @@ function [im,scalebaraxes,scalebarimage]=pvcontinuousmap(dirname,channel,cells,c
 %    It corresponds to the size of each symbol.  It must be
 %    NxLENGTH(CELLS).
 %
-%  COLOR is an optional list of colors to use for the cells.  It is a 
+%  COLORS is an optional list of colors to use for the cells.  It is a 
 %    LENGTH(CELLS)x3 matrix.  If [-1 -1 -1] is passed, then the cell
 %    is colorized according to its index value.  If any other value
 %    is passed, then that color is used for the cell.  Color values are
