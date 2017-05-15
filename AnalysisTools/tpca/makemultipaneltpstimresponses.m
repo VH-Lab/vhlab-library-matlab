@@ -18,9 +18,13 @@ function result = makemultipaneltpstimresponses(dirname, singleconditionfname, v
 % savetifffile (1)              | Should we save the file to TIFF format?
 % tifffilename                  | Filename to be saved for TIFF format.
 %       ('sc_stim_GAIN.tif')    | 
-% input_range ([0 MAX])         | The input range that is used to scale the TIFF file
-%                               |   (by default, 0 to MAX image value is used, but a 
-%                               |    specific value can be used by passing [0 VALUE])
+% input_range ([0 VALUE])       | The input range that is used to scale the TIFF file
+%                               |    (by default, 0 to the VALUE calculated by the
+%                               |    input_range_method is used, but a
+%                               |    specific value can be used by passing [0 MYVALUE])
+% input_range_method ('99.99%') | The algorithm that is used for calculating the
+%                               |    upper end of the input_range. Options: 'NN%' (use
+%                               |    NN% percentile), 'max' (use the maximum value).
 % output_range ([0 255])        | The output range for the TIFF file.
 %   
 % See also: MAKEMULTIPANELTPDIRRESPONSES, MAKEMULTIPANELNMTPDISPLAY, NAMEVALUEPAIR
@@ -32,6 +36,7 @@ filename = '';
 savetifffile = 1;
 tifffilename = '';
 input_range = '';
+input_range_method = '99.99%';
 output_range = [0 255];
 
 assign(varargin{:});
@@ -63,9 +68,17 @@ end;
 
 if savetifffile,
 	if isempty(input_range),
-		input_range = [0 max(result(:))];
+		if strcmp(lower(input_range_method),'max') | strcmp(lower(input_range_method),'maximum'),
+			input_range = [0 max(result(:))];
+		elseif any(input_range_method=='%'),
+			P = sscanf(input_range_method,'%f%');
+			if isempty(P) | (P<0 | P>100),
+				error(['Do not know how to process input_range_method of ' input_range_method '.']);
+			end;
+			input_range = [0 prctile(result(:),P)];
+		end;
 	end;
-	newimage = rescale(result, input_range, output_range);
+	newimage = rescale(double(result), input_range, output_range);
 	imwrite(uint8(newimage), [dirname filesep tifffilename]);
 end;
 
