@@ -22,6 +22,7 @@ function [or,di] = intrinorivectorsum(images, angles, plotit, difference)
 %  OR is the vector sum for orientation data (angles modulo 180), and
 %  DI is the vector sum including direction data (angles modulo 360).
 
+
 % input parameters
 
 angles = compass2cartesian(angles,0) * pi/180;

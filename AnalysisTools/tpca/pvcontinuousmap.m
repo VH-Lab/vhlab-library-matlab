@@ -170,7 +170,7 @@ for i=1:length(cells),
 		end;
 	end;
 	pixelindsa = findassociate(cells{i},'pixelinds','','');
-    pixellocsa = findassociate(cells{i},'pixellocs','','');
+	pixellocsa = findassociate(cells{i},'pixellocs','','');
 
 	if isempty(pixelindsa),
 		warning(['Cell ' int2str(i) ' does not have associate ''pixelinds''.']);
@@ -184,147 +184,153 @@ for i=1:length(cells),
 		values(end+1) = x;  % next line x has new meaning
 		[xyz]=tpgetcellposition(cells{i});
 		x = xyz(1); y=xyz(2);
-		if rotate==0, pts = [pts ; x y];
-		elseif rotate==90, pts = [pts; y 1+sz(1)-x];
+		if rotate==0,
+			pts = [pts ; x y];
+		elseif rotate==90,
+			pts = [pts; y 1+sz(1)-x];
 		end;
 		inclpts(end+1) = i;
-        if any(cols(i,:)<0),
-            mycol = ctab(findclosest(steps,values(end)),:);
-        else,
-            mycol = cols(i,:);
-        end;
+		if any(cols(i,:)<0),
+			mycol = ctab(findclosest(steps,values(end)),:);
+		else,
+			mycol = cols(i,:);
+		end;
 
-        if symb(i)==0, % draw outline of the cell
-            if vectorgraphics,
-                patch(pixellocsa.data.x,pixellocsa.data.y,mycol);
-            else,
-                inds = pixelindsa.data;
-            end;
+		if symb(i)==0, % draw outline of the cell
+			if vectorgraphics,
+				patch(pixellocsa.data.x,pixellocsa.data.y,mycol);
+			else,
+				inds = pixelindsa.data;
+			end;
 		elseif symb(i)==1,  % colored, filled circle
 			xi_ = -symbolsize(i):1:symbolsize(i);
 			yi_p= sqrt(symbolsize(i)^2-xi_.^2);
 			yi_m=-sqrt(symbolsize(i)^2-xi_.^2);
 			xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
-            if vectorgraphics,
-                patch(xi,yi,mycol);
-            else,
-    			inds = inpolygon(blank_x,blank_y,xi,yi);
-            end;
+			if vectorgraphics,
+				patch(xi,yi,mycol);
+			else,
+				inds = inpolygon(blank_x,blank_y,xi,yi);
+			end;
 		elseif symb(i)==2,  % colored, filled square
-            if vectorgraphics,
-                Xc = [ y-symbolsize(i) y-symbolsize(i) y+symbolsize(i) y+symbolsize(i) y-symbolsize(i) ];
-                Yc = [ x-symbolsize(i) x+symbolsize(i) x+symbolsize(i) x-symbolsize(i) x-symbolsize(i) ];
-                patch(Xc,Yc,mycol);
-            else,
-                im0_ = im0;
-                im0_(round(y-symbolsize(i):y+symbolsize(i)),round(x-symbolsize(i):x+symbolsize(i)))=1;
-                inds = find(im0_);                
-            end;
+			if vectorgraphics,
+				Xc = [ y-symbolsize(i) y-symbolsize(i) y+symbolsize(i) y+symbolsize(i) y-symbolsize(i) ];
+				Yc = [ x-symbolsize(i) x+symbolsize(i) x+symbolsize(i) x-symbolsize(i) x-symbolsize(i) ];
+				patch(Xc,Yc,mycol);
+			else,
+				im0_ = im0;
+				im0_(round(y-symbolsize(i):y+symbolsize(i)),round(x-symbolsize(i):x+symbolsize(i)))=1;
+				inds = find(im0_);                
+			end;
 		elseif symb(i)==3|symb(i)==4,
-			if symb(i)==3, ang = values(end); else, ang = inda.data; end;
+			if symb(i)==3,
+				ang = values(end);
+			else,
+				ang = inda.data;
+			end;
 			theta = (90+90-rotate-ang)*pi/180;  % convert to radians
-            th =  arrow_thickness;  % thickness
-            xi_ = []; yi_ = [];
-            if vectorgraphics,
-                theta_ = theta + pi;  % first point is in negative direction
-                xi_(end+1,[1 2])=[sin(theta_) sin(theta)];yi_(end+1,[1 2])=[cos(theta_) cos(theta)];
-                xi_(end+1,[1 2])=[sin(theta) sin(theta+pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta+pi/2)];
-                xi_(end+1,[1 2])=[sin(theta) sin(theta-pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta-pi/2)];
-                xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
-                for i=1:size(xi_,1),
-                    plot(xi(i,:),yi(i,:),'-','color',mycol,'linewidth',th);
-                end;
-            else,
-                theta_ = theta + pi;  % first point is in negative direction
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                theta_ = theta;       % next point is in positive direction
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta - pi/2; % one arrow branch
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta;	     % and back to center
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta + pi/2; % and now the other branch
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta;	     % and back to center
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta + pi;	     % back to the negative
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta;	     % and back to center to add nose
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=(1+th)*sin(theta_);yi_(end+1)=(1+th)*cos(theta_);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
-                inds = inpolygon(blank_x,blank_y,xi,yi);
-            end;
+			th =  arrow_thickness;  % thickness
+			xi_ = []; yi_ = [];
+			if vectorgraphics,
+				theta_ = theta + pi;  % first point is in negative direction
+				xi_(end+1,[1 2])=[sin(theta_) sin(theta)];yi_(end+1,[1 2])=[cos(theta_) cos(theta)];
+				xi_(end+1,[1 2])=[sin(theta) sin(theta+pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta+pi/2)];
+				xi_(end+1,[1 2])=[sin(theta) sin(theta-pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta-pi/2)];
+				xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
+				for i=1:size(xi_,1),
+					plot(xi(i,:),yi(i,:),'-','color',mycol,'linewidth',th);
+				end;
+			else,
+				theta_ = theta + pi;  % first point is in negative direction
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				theta_ = theta;       % next point is in positive direction
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta - pi/2; % one arrow branch
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta;	     % and back to center
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta + pi/2; % and now the other branch
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta;	     % and back to center
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta + pi;	     % back to the negative
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta;	     % and back to center to add nose
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=(1+th)*sin(theta_);yi_(end+1)=(1+th)*cos(theta_);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
+				inds = inpolygon(blank_x,blank_y,xi,yi);
+			end;
 		elseif symb(i)==5|symb(i)==6,  % circles w/ arrows
-            th =  circle_inner_thickness;  % thickness
-            xi_ = []; yi_ = [];
-            if vectorgraphics,
-                theta_ = theta + pi;  % first point is in negative direction
-                xi_(end+1,[1 2])=[sin(theta_) sin(theta)];yi_(end+1,[1 2])=[cos(theta_) cos(theta)];
-                xi_(end+1,[1 2])=[sin(theta) sin(theta+pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta+pi/2)];
-                xi_(end+1,[1 2])=[sin(theta) sin(theta-pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta-pi/2)];
-                xi=xi_*symbolsize(i,2)+x; yi=yi_*symbolsize(i,2)+y;
-                for i=1:size(xi_,1),
-                    plot(xi(i,:),yi(i,:),'-','color',mycol,'linewidth',th);
-                end;
-                xi_ = -symbolsize(i,1):1:symbolsize(i,1);
-                yi_p= sqrt(symbolsize(i,1)^2-xi_.^2);
-                yi_m=-sqrt(symbolsize(i,1)^2-xi_.^2);
-                xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
+			th =  circle_inner_thickness;  % thickness
+			xi_ = []; yi_ = [];
+			if vectorgraphics,
+				theta_ = theta + pi;  % first point is in negative direction
+				xi_(end+1,[1 2])=[sin(theta_) sin(theta)];yi_(end+1,[1 2])=[cos(theta_) cos(theta)];
+				xi_(end+1,[1 2])=[sin(theta) sin(theta+pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta+pi/2)];
+				xi_(end+1,[1 2])=[sin(theta) sin(theta-pi/2)]; yi_(end+1,[1 2])=[cos(theta); cos(theta-pi/2)];
+				xi=xi_*symbolsize(i,2)+x; yi=yi_*symbolsize(i,2)+y;
+				for i=1:size(xi_,1),
+					plot(xi(i,:),yi(i,:),'-','color',mycol,'linewidth',th);
+				end;
+				xi_ = -symbolsize(i,1):1:symbolsize(i,1);
+				yi_p= sqrt(symbolsize(i,1)^2-xi_.^2);
+				yi_m=-sqrt(symbolsize(i,1)^2-xi_.^2);
+				xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
                 
-            else,
-                xi_ = -th*symbolsize(i,1):1:th*symbolsize(i,1);
-                yi_p= sqrt((symbolsize(i,1)*th)^2-xi_.^2);
-                yi_m=-sqrt((symbolsize(i,1)*th)^2-xi_.^2);
-                xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
-                %if i==1, figure; plot(xi,yi); end;
-                inds1_ = find(inpolygon(blank_x,blank_y,xi,yi));
-                            th =  circle_outer_thickness;  % thickness
-                xi_ = -th*symbolsize(i,1):1:th*symbolsize(i,1);
-                yi_p= sqrt((symbolsize(i,1)*th)^2-xi_.^2);
-                yi_m=-sqrt((symbolsize(i,1)*th)^2-xi_.^2);
-                xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
-                %if i==1, hold on; plot(xi,yi,'r'); end;
-                inds1__ = find(inpolygon(blank_x,blank_y,xi,yi));
-                inds1 = setdiff(inds1_,inds1__);
-                % now add arrow
-                th=arrow_thickness;
-                if symb(i)==5, ang = values(end); else, ang = inda.data; end;
-                theta = (90+90-rotate-ang)*pi/180;  % convert to radians
-                xi_ = []; yi_ = [];
-                theta_ = theta + pi;  % first point is in negative direction
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                theta_ = theta;       % next point is in positive direction
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta - pi/2; % one arrow branch
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta;      % and back to center
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta + pi/2; % and now the other branch
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta;      % and back to center
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta + pi;         % back to the negative
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                theta_ = theta;      % and back to center to add nose
-                xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=(1+th)*sin(theta_);yi_(end+1)=(1+th)*cos(theta_);
-                xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
-                xi=xi_*symbolsize(i,2)+x; yi=yi_*symbolsize(i,2)+y;
-                inds2 = find(inpolygon(blank_x,blank_y,xi,yi));
-                inds = union(inds1,inds2);
-            end;
+			else,
+				xi_ = -th*symbolsize(i,1):1:th*symbolsize(i,1);
+				yi_p= sqrt((symbolsize(i,1)*th)^2-xi_.^2);
+				yi_m=-sqrt((symbolsize(i,1)*th)^2-xi_.^2);
+				xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
+				%if i==1, figure; plot(xi,yi); end;
+				inds1_ = find(inpolygon(blank_x,blank_y,xi,yi));
+				th =  circle_outer_thickness;  % thickness
+				xi_ = -th*symbolsize(i,1):1:th*symbolsize(i,1);
+				yi_p= sqrt((symbolsize(i,1)*th)^2-xi_.^2);
+				yi_m=-sqrt((symbolsize(i,1)*th)^2-xi_.^2);
+				xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
+				%if i==1, hold on; plot(xi,yi,'r'); end;
+				inds1__ = find(inpolygon(blank_x,blank_y,xi,yi));
+				inds1 = setdiff(inds1_,inds1__);
+				% now add arrow
+				th=arrow_thickness;
+				if symb(i)==5, ang = values(end); else, ang = inda.data; end;
+				theta = (90+90-rotate-ang)*pi/180;  % convert to radians
+				xi_ = []; yi_ = [];
+				theta_ = theta + pi;  % first point is in negative direction
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				theta_ = theta;       % next point is in positive direction
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta - pi/2; % one arrow branch
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta;      % and back to center
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta + pi/2; % and now the other branch
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta;      % and back to center
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta + pi;         % back to the negative
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				theta_ = theta;      % and back to center to add nose
+				xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=(1+th)*sin(theta_);yi_(end+1)=(1+th)*cos(theta_);
+				xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
+				xi=xi_*symbolsize(i,2)+x; yi=yi_*symbolsize(i,2)+y;
+				inds2 = find(inpolygon(blank_x,blank_y,xi,yi));
+				inds = union(inds1,inds2);
+			end;
 		elseif symb(i)==7|symb(i)==8,  % lines orthogonal to angle
 			if symb(i)==7, ang = values(end); else, ang = inda.data; end;
 			theta = (90+90+90-rotate-ang)*pi/180;  % convert to radians 
@@ -340,10 +346,10 @@ for i=1:length(cells),
 			xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
 			xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
 			inds = inpolygon(blank_x,blank_y,xi,yi);
-        elseif symb(i)==9|symb(i)==10, % direction lines
-            % values(end) is assumed to be direction vector
-            di = abs(values(end));
-            theta = pi-angle(values(end))-rotate*pi/180;
+		elseif symb(i)==9|symb(i)==10, % direction lines
+			% values(end) is assumed to be direction vector
+			di = abs(values(end));
+			theta = pi-angle(values(end))-rotate*pi/180;
 			%theta = (90+90-rotate-ang)*pi/180;  % convert to radians 
 			th =  arrow_thickness;  % thickness
 			xi_ = []; yi_ = [];
@@ -355,10 +361,10 @@ for i=1:length(cells),
 			xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
 			xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
 			inds = inpolygon(blank_x,blank_y,xi,yi);
-            mycol = values(end)*(opposite_dir_color-background_dir_color);
-            im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
-            im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
-            im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
+			mycol = values(end)*(opposite_dir_color-background_dir_color);
+			im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
+			im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
+			im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
 
 			xi_ = []; yi_ = [];
   			theta_ = theta;       % next branch is in positive direction
@@ -369,25 +375,25 @@ for i=1:length(cells),
 			xi_(end+1)=sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)+th*cos(theta_+pi/2);
 			xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
 			inds = inpolygon(blank_x,blank_y,xi,yi);
-            mycol = values(end)*(preferred_dir_color-background_dir_color);
-            im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
-            im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
-            im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
-            if symb(i)==10,
-                xi_ = []; yi_ = [];
-                theta_ = theta;       % center square
-                xi_(end+1)=(-values(end)+th)*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=(-values(end)+th)*cos(theta_)-th*cos(theta_+pi/2);
-                xi_(end+1)=(-values(end)+th)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=(-values(end)+th)*cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=(-values(end)-th)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=(-values(end)-th)*cos(theta_)+th*cos(theta_+pi/2);
-                xi_(end+1)=(-values(end)-th)*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=(-values(end)-th)*cos(theta_)-th*cos(theta_+pi/2);
-                xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
-                inds = inpolygon(blank_x,blank_y,xi,yi);
-                mycol = values(end)*(center_dir_color-background_dir_color);
-                im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
-                im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
-                im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
-            end;
-        elseif symb(i)==11|symb(i)==12, % direction lines
+			mycol = values(end)*(preferred_dir_color-background_dir_color);
+			im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
+			im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
+			im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
+			if symb(i)==10,
+				xi_ = []; yi_ = [];
+				theta_ = theta;       % center square
+				xi_(end+1)=(-values(end)+th)*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=(-values(end)+th)*cos(theta_)-th*cos(theta_+pi/2);
+				xi_(end+1)=(-values(end)+th)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=(-values(end)+th)*cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=(-values(end)-th)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=(-values(end)-th)*cos(theta_)+th*cos(theta_+pi/2);
+				xi_(end+1)=(-values(end)-th)*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=(-values(end)-th)*cos(theta_)-th*cos(theta_+pi/2);
+				xi=xi_*symbolsize(i)+x; yi=yi_*symbolsize(i)+y;
+				inds = inpolygon(blank_x,blank_y,xi,yi);
+				mycol = values(end)*(center_dir_color-background_dir_color);
+				im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
+				im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
+				im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
+			end;
+		elseif symb(i)==11|symb(i)==12, % direction lines
 			if symb(i)==11, ang = values(end); else, ang = inda.data; end;
 			theta = (90+90+90-rotate-ang)*pi/180;  % convert to radians 
 			th = line_thickness;  % thickness
@@ -431,8 +437,8 @@ for i=1:length(cells),
 			xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
 			xi=xi_*symbolsize(i,2)+x; yi=yi_*symbolsize(i,2)+y;
 			inds2 = find(inpolygon(blank_x,blank_y,xi,yi));
-            inds = union(inds1,inds2);
-        elseif symb(i)==13|symb(i)==14, % direction lines
+			inds = union(inds1,inds2);
+		elseif symb(i)==13|symb(i)==14, % direction lines
 			if symb(i)==13, ang = values(end); else, ang = inda.data; end;
 			theta = (90+90+90-rotate-ang)*pi/180;  % convert to radians 
 			th = line_thickness;  % thickness
@@ -450,7 +456,7 @@ for i=1:length(cells),
             
 			theta = (90+90-rotate-ang)*pi/180;  % convert to radians 
 			th =  arrow_thickness;  % thickness
-            r = arrow_radius;
+			r = arrow_radius;
 			xi_ = []; yi_ = [];
 			theta_ = theta + pi;  % first point is in negative direction
 			xi_(end+1)=0*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=0*cos(theta_)+th*cos(theta_+pi/2);
@@ -477,85 +483,86 @@ for i=1:length(cells),
 			xi_(end+1)=sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=cos(theta_)-th*cos(theta_+pi/2);
 			xi=xi_*symbolsize(i,2)+x; yi=yi_*symbolsize(i,2)+y;
 			inds2 = find(inpolygon(blank_x,blank_y,xi,yi));
-            inds = union(inds1,inds2);
-        elseif symb(i)==15|symb(i)==16,    
+			inds = union(inds1,inds2);
+		elseif symb(i)==15|symb(i)==16,    
 			if symb(i)==15, ang = values(end); else, ang = inda.data; end;
-            theta = (90+90-rotate-ang)*pi/180;  % convert to radians 
+			theta = (90+90-rotate-ang)*pi/180;  % convert to radians 
 			th =  arrow_thickness;  % thickness
-            r = arrow_radius;
-            di = symbolsize(i,2);
-            Rn = max([1-di 0]);
-            Rp = max([1+di 2]);
-            al = 2*arrow_length; %0.33*cos(30*pi/180)
+			r = arrow_radius;
+			di = symbolsize(i,2);
+			Rn = max([1-di 0]);
+			Rp = max([1+di 2]);
+			al = 2*arrow_length; %0.33*cos(30*pi/180)
 			xi_ = []; yi_ = [];
 			theta_ = theta + pi;  % first point is in negative direction
-            xi_(end+1) = +th*sin(theta_+pi/2); yi_(end+1)=th*cos(theta_+pi/2);
+			xi_(end+1) = +th*sin(theta_+pi/2); yi_(end+1)=th*cos(theta_+pi/2);
 			xi_(end+1)=max(Rn-th,0)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=max(Rn-th,0)*cos(theta_)+th*cos(theta_+pi/2);
-            if Rn>al/2,
-                % add arrow head if needed
-                xi_(end+1) = xi_(end)+(al-2*th)*sin(theta_+150*pi/180);yi_(end+1)=yi_(end)+(al-2*th)*cos(theta_+150*pi/180);
-                xi_(end+1) = xi_(end)+2*th*sin(theta_+(150-90)*pi/180); yi_(end+1)=yi_(end)+2*th*cos(theta_+(150-90)*pi/180);
-            end;
-            xi_(end+1)=(Rn>0)*(Rn+th)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=(Rn>0)*(Rn+th)*cos(theta_)+th*cos(theta_+pi/2);
-            if Rn>al/2,
-                % now add nose
-                xi_(end+1)=(Rn+2*th)*sin(theta_);yi_(end+1)=(Rn+2*th)*cos(theta_);
-            end;
-            xi_(end+1)=(Rn>0)*(Rn+th)*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=(Rn>0)*(Rn+th)*cos(theta_)-th*cos(theta_+pi/2);
-            xiii=max(Rn-th)*sin(theta_)-th*sin(theta_+pi/2);yiii=max(Rn-th,0)*cos(theta_)-th*cos(theta_+pi/2);
-            if Rn>al/2,
-                % add second branch
-                xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180)+2*th*sin(theta_-(150-90)*pi/180);
-                yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180)+2*th*cos(theta_-(150-90)*pi/180);
-                xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180);
-                yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180);
-            end;
-            xi_(end+1) = xiii; yi_(end+1) = yiii;
-            xi_(end+1) = -th*sin(theta_+pi/2); yi_(end+1)=-th*cos(theta_+pi/2);
-            % now we're parked at 0 on -th y side
+			if Rn>al/2,
+				% add arrow head if needed
+				xi_(end+1) = xi_(end)+(al-2*th)*sin(theta_+150*pi/180);yi_(end+1)=yi_(end)+(al-2*th)*cos(theta_+150*pi/180);
+				xi_(end+1) = xi_(end)+2*th*sin(theta_+(150-90)*pi/180); yi_(end+1)=yi_(end)+2*th*cos(theta_+(150-90)*pi/180);
+			end;
+			xi_(end+1)=(Rn>0)*(Rn+th)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=(Rn>0)*(Rn+th)*cos(theta_)+th*cos(theta_+pi/2);
+			if Rn>al/2,
+				% now add nose
+				xi_(end+1)=(Rn+2*th)*sin(theta_);yi_(end+1)=(Rn+2*th)*cos(theta_);
+			end;
+			xi_(end+1)=(Rn>0)*(Rn+th)*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=(Rn>0)*(Rn+th)*cos(theta_)-th*cos(theta_+pi/2);
+			xiii=max(Rn-th)*sin(theta_)-th*sin(theta_+pi/2);yiii=max(Rn-th,0)*cos(theta_)-th*cos(theta_+pi/2);
+			if Rn>al/2,
+				% add second branch
+				xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180)+2*th*sin(theta_-(150-90)*pi/180);
+				yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180)+2*th*cos(theta_-(150-90)*pi/180);
+				xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180);
+				yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180);
+			end;
+			xi_(end+1) = xiii; yi_(end+1) = yiii;
+			xi_(end+1) = -th*sin(theta_+pi/2); yi_(end+1)=-th*cos(theta_+pi/2);
+			% now we're parked at 0 on -th y side
 			theta_ = theta;       % next point is in positive direction
 			xi_(end+1)=max(Rp-th,0)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=max(Rp-th,0)*cos(theta_)+th*cos(theta_+pi/2);
-            xi_(end+1) = xi_(end)+(al-2*th)*sin(theta_+150*pi/180);yi_(end+1)=yi_(end)+(al-2*th)*cos(theta_+150*pi/180);
-            xi_(end+1) = xi_(end)+2*th*sin(theta_+(150-90)*pi/180); yi_(end+1)=yi_(end)+2*th*cos(theta_+(150-90)*pi/180);                       
+			xi_(end+1) = xi_(end)+(al-2*th)*sin(theta_+150*pi/180);yi_(end+1)=yi_(end)+(al-2*th)*cos(theta_+150*pi/180);
+			xi_(end+1) = xi_(end)+2*th*sin(theta_+(150-90)*pi/180); yi_(end+1)=yi_(end)+2*th*cos(theta_+(150-90)*pi/180);                       
 			xi_(end+1)=(Rp+th)*sin(theta_)+th*sin(theta_+pi/2);yi_(end+1)=(Rp+th)*cos(theta_)+th*cos(theta_+pi/2);
-            % nose
+			% nose
 			xi_(end+1)=(Rp+2*th)*sin(theta_)+0*th*sin(theta_+pi/2);yi_(end+1)=(Rp+2*th)*cos(theta_)+0*th*cos(theta_+pi/2);
 			xi_(end+1)=(Rp+th)*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=(Rp+th)*cos(theta_)-th*cos(theta_+pi/2);
-            % second branch
-            xiii = (Rp-th)*sin(theta_)-th*sin(theta_+pi/2); yiii = (Rp-th)*cos(theta_)-th*cos(theta_+pi/2);
-            xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180)-2*th*sin(theta_+(30+90)*pi/180);
-            yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180)-2*th*cos(theta_+(30+90)*pi/180);
-            xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180);
-            yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180);
+			% second branch
+			xiii = (Rp-th)*sin(theta_)-th*sin(theta_+pi/2); yiii = (Rp-th)*cos(theta_)-th*cos(theta_+pi/2);
+			xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180)-2*th*sin(theta_+(30+90)*pi/180);
+			yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180)-2*th*cos(theta_+(30+90)*pi/180);
+			xi_(end+1) = xiii+(al-2*th)*sin(theta_-150*pi/180);
+			yi_(end+1)=yiii+(al-2*th)*cos(theta_-150*pi/180);
 			xi_(end+1)=xiii;yi_(end+1)=yiii;
-            % now last point
+			% now last point
 			xi_(end+1)=0*sin(theta_)-th*sin(theta_+pi/2);yi_(end+1)=0*cos(theta_)-th*cos(theta_+pi/2);
 
-			xi=xi_*symbolsize(i,1)+x; yi=yi_*symbolsize(i,1)+y;
+			xi=xi_*symbolsize(i,1)+x;
+			yi=yi_*symbolsize(i,1)+y;
 			inds = find(inpolygon(blank_x,blank_y,xi,yi));
-            mycol = cols(i,:);
-            im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
-            im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
-            im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
+			mycol = cols(i,:);
+			im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
+			im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
+			im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
             
 			xi_ = 3*(-th*symbolsize(i,1):1:th*symbolsize(i,1));
 			yi_p= 3*sqrt((symbolsize(i,1)*th)^2-xi_.^2);
 			yi_m=-3*sqrt((symbolsize(i,1)*th)^2-xi_.^2);
 			xi = [xi_ xi_(end:-1:1)]+x; yi=[yi_p yi_m(end:-1:1)]+y;
-            inds = find(inpolygon(blank_x,blank_y,xi,yi));
-            mycol = [ 1 1 1 ];
-            im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
-            im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
-            im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
+			inds = find(inpolygon(blank_x,blank_y,xi,yi));
+			mycol = [ 1 1 1 ];
+			im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
+			im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
+			im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
 
-            
-        else, error(['Unknown symbol ' int2str(symb(i)) '.']);
+		else, error(['Unknown symbol ' int2str(symb(i)) '.']);
 		end;
-        if ~any(symb(i)==[9 10 15 16]),
-            im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
-            im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
-            im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
-        end;
+
+		if ~any(symb(i)==[9 10 15 16]),
+			im1(inds) = (1-transparency)*mycol(1)+(transparency)*im1(inds);
+			im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
+			im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
+		end;
 	end;
 end;
 
