@@ -9,7 +9,10 @@ function [or,di] = intrinorivectorsum(images, angles, plotit, difference)
 %  Complex values are returned in OR and DI.
 %
 %  IMAGES should be a three dimensional matrix of single condition images,
-%     with IMAGES(:,:,i) corresponding to ANGLES(i).
+%     with IMAGES(:,:,i) corresponding to ANGLES(i). These images should be
+%     POSITIVE to indicate a response (typically, this means that intrinsic signal
+%     image single condition images should be scaled by -1, because in most intrinsic signal
+%     imaging experiments, negative signal indicates positive response).
 %
 %  ANGLES is a vector list of single condition angles (e.g., 0:45:360-45).
 %    ANGLES should be in compass units.
@@ -19,8 +22,16 @@ function [or,di] = intrinorivectorsum(images, angles, plotit, difference)
 %  DIFFERENCE is 0/1 and determines if single conditions or orthogonal
 %  difference maps are used.
 %
-%  OR is the vector sum for orientation data (angles modulo 180), and
+%  OR is the vector sum for orientation data (angles modulo 180).
+%    The matrix is complex, with absolute value indicating the vector magnitude
+%    of the signal at each position, and with phase (angle) representing orientation.
+%    Horizontal orientations are represented by 0 and 2*pi, and vertical orientations are
+%    represented by pi. Orientation increases anti-clockwise. Note that orientation angle
+%    increases at twice the rate of direction angle because orientation is also represented
+%    in 0 .. 2*pi.
+%
 %  DI is the vector sum including direction data (angles modulo 360).
+%
 
 
 % input parameters

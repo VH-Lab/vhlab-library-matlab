@@ -72,20 +72,17 @@ images = [];
 
 for n=1:length(dirstimlist),
 	if ~isnan(dirstimlist(n)),
-		images = cat(3,images,-indimages{n});  % negative sign b/c will call intrinsic imaging map routine
+		images = cat(3,images,indimages{n});  % needs positive sign
 	end;
 end;
 
 if dorectify,
-	images = -rectify(-images); % we are keeping it negative here
+	images = rectify(images); 
 end;
 
 angles = dirstimlist(find(~isnan(dirstimlist)));
 
-[or,di] = intrinorivectorsum(images, angles, 0, 0); % the intrinsic function works fine, but need to flip sign b/c signal is positive
-
-
-  % save files
+[or,di] = intrinorivectorsum(images, angles, 0, 0); 
 
 if savefile,
 	save([dirname filesep filename],'or','di','-mat');
