@@ -142,7 +142,13 @@ else,
 	im1 = rescale(double(im1),[min(min(im1)) max(max(im1))],[0 1]);
 end;
 
-im2 = im1; im3 = im1;
+if size(im1,3)==1,
+	im2 = im1; im3 = im1;
+else,
+	im3 = im1(:,:,3);
+	im2 = im1(:,:,2);
+	im1 = im1(:,:,1);
+end;
 
 sz = size(im1); im0 = zeros(size(im1));
 [blank_x,blank_y] = meshgrid(1:sz(2),1:sz(1));

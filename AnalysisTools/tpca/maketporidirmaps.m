@@ -20,7 +20,7 @@ function [or,di] = maketporidirmaps(dirname, singleconditionfname, varargin)
 %       ('sc_orimap_angle.tif')    | 
 % ori_tifffilename_mag             | Filename to be saved for TIFF format for orimap magnitudes.
 %       ('sc_orimap_map.tif')      | 
-% angle_shift (0)                  | Angle shift (to correct animal head rotation, for example)
+% angle_shift (0)                  | Angle shift, in radians (to correct animal head rotation, for example)
 % dorectify (1)                    | 0/1 Rectify dF/F responses below 0
 % cmap (fitzlabclut(256))          | The color table for the TIFF files for angles; the magnitude
 %                                  |   TIFF files will range from 0..255 (scaled from 0..max)
@@ -89,7 +89,6 @@ if savefile,
 end;
 
 if savetifffiles,
-
 	or_a = mod(angle(or)+angle_shift,2*pi);
 	ori_angles = rescale(or_a,[0 2*pi],[1 256]);
 	or_m = abs(or);

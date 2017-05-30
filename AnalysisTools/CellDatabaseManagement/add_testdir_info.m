@@ -1,7 +1,7 @@
 function [assoc,cells] = add_testdir_info(ds, cells, cellnames)
 % ADD_TESTDIR_INFO - Add test directory info as associates to cells
 %
-%  [ASSOC,CELLS] = ADD_TESTDIR_INFO(DS, [CELLS])
+%  [ASSOC,CELLS] = ADD_TESTDIR_INFO(DS, [CELLS], [CELLNAMES])
 %
 %  Looks for the file 'testdirinfo.txt' at the root level of
 %  the directory described by DIRSTRUCT DS, and uses that information
