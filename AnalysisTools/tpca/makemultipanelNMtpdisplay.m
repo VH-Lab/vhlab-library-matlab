@@ -1,7 +1,7 @@
-function result = makemultipanelNMtpdisplay(filename, N, M, ids, insertedimage, gain)
+function result = makemultipanelNMtpdisplay(filename, N, M, ids, insertedimage, gain, mask)
 % MAKEMULTIPANELNMTPDISPLAY - Make a multipanel NxM display of 2-photon single condition images
 %
-%  RESULT = MAKEMULTIPANELNMTPDISPLAY(FILENAME, N, M, IDS, INSERTEDIMAGE, GAIN)
+%  RESULT = MAKEMULTIPANELNMTPDISPLAY(FILENAME, N, M, IDS, INSERTEDIMAGE, GAIN [, MASK])
 %
 %  Makes a giant panel of two-photon single condition images,
 %  given the following inputs:
@@ -12,6 +12,7 @@ function result = makemultipanelNMtpdisplay(filename, N, M, ids, insertedimage, 
 %      IDS - the stimulus numbers of the single conditions to include the image, going from left to right, top to bottom
 %      INSERTEDIMAGE - An image to be inserted when -1 is given as an IDS value (or 0 to leave blank)
 %      GAIN - a multiplicative factor on the image
+%      MASK - optional, a 0/1 mask to apply to the images before organizing them.
 %
 %  Returns:
 %      RESULT - A single cell containing an image that is 3x the width and 3x the height of the original image, 
@@ -20,8 +21,15 @@ function result = makemultipanelNMtpdisplay(filename, N, M, ids, insertedimage, 
 %
 %  See also: MAKEMULTIPANELTPDISPLAY
 
+if nargin<7,
+	mask = 1;
+end;
 
 load(filename,'indimages','-mat');
+
+for i=1:length(indimages),
+	indimages{i} = double(mask).*indimages{i};
+end;
 
 i = 1; r = 1;
 while i<=length(ids),

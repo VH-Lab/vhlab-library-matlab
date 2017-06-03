@@ -26,6 +26,7 @@ function result = makemultipaneltpstimresponses(dirname, singleconditionfname, v
 %                               |    upper end of the input_range. Options: 'NN%' (use
 %                               |    NN% percentile), 'max' (use the maximum value).
 % output_range ([0 255])        | The output range for the TIFF file.
+% maskfile ([])                 | Should we apply a mask to the single condition images?
 %   
 % See also: MAKEMULTIPANELTPDIRRESPONSES, MAKEMULTIPANELNMTPDISPLAY, NAMEVALUEPAIR
 
@@ -38,6 +39,7 @@ tifffilename = '';
 input_range = '';
 input_range_method = '99.99%';
 output_range = [0 255];
+maskfile = '';
 
 assign(varargin{:});
 
@@ -49,6 +51,14 @@ if isempty(tifffilename),
 	tifffilename = ['sc_stim_' num2str(gain) '.tif'];
 end;
 
+if isempty(maskfile),
+	mask = 1;
+else,
+	z = load(maskfile);
+	fn = fieldnames(z);
+	mask = double(getfield(z,fn{1})); 
+end;
+
 
  % step 1, decode the directions used
 
@@ -58,7 +68,7 @@ N = numStims(s);
 
 indexes = [ 1:N];
 
-result = makemultipanelNMtpdisplay([dirname filesep singleconditionfname], 1, N, indexes, 0, gain);
+result = makemultipanelNMtpdisplay([dirname filesep singleconditionfname], 1, N, indexes, 0, gain, mask);
 
 result = result{1};
 
