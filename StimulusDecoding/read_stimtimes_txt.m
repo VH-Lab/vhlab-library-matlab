@@ -1,11 +1,14 @@
-function [stimids, stimtimes, frametimes] = read_stimtimes_txt(dirname)
+function [stimids, stimtimes, frametimes] = read_stimtimes_txt(dirname, filename)
 % READ_STIMTIMES_TXT - Interpret the stimtimes.txt file written by VH lab Spike2
 %
-%   [STIMIDS, STIMTIMES, FRAMETIMES] = READ_STIMTIMES_TXT(DIRNAME)
+%   [STIMIDS, STIMTIMES, FRAMETIMES] = READ_STIMTIMES_TXT(DIRNAME, [FILENAME])
 %
 %  Reads the stimulus ids, stimulus times, and frame times for each stimulus
 %  from the 'stimtimes.txt' file located in the directory DIRNAME (full path
 %  needed).
+%
+%  Optionally, if one wishes to read a file with a different name, one can
+%  pass the FILENAME (default 'stimtimes.txt')
 %  
 %  STIMIDS is a vector containing the stim id of each stimulus presentation.
 %  STIMTIMES is a vector with the time of stimulus onset for each stimulus
@@ -15,7 +18,11 @@ function [stimids, stimtimes, frametimes] = read_stimtimes_txt(dirname)
 %     for stimulus presentation i.
 %   
 
-fname = 'stimtimes.txt';
+if nargin<2,
+	fname = 'stimtimes.txt';
+else,
+	fname = filename;
+end;
 
 fid = fopen([dirname filesep fname]);
 
