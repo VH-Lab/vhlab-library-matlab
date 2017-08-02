@@ -80,3 +80,4 @@ end;
 
 function assoc=myassoc(type,data)
 assoc=struct('type',type,'owner','twophoton','data',data,'desc','');
+end
