@@ -1,8 +1,8 @@
-function [f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff_var, pref, null, orth, fit, sig_vis]=extract_oridir_indexes(cell,varargin)
+function [f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff_var, pref, null, orth, fit, sig_vis,dircv]=extract_oridir_indexes(cell,varargin)
 % Extract common orientation/direction index values from a cell
 %
 %  [F1F0,DIRPREF,OI,TUNEWIDTH,CV,DI,SIG_ORI,BLANK_RATE,MAX_RATE,
-%     COEFFVAR] = EXTRACT_ORIDIR_INDEXES(CELL)
+%     COEFFVAR,PREF,NULL,ORTH,FIT,SIG_VIS,DIRCV] = EXTRACT_ORIDIR_INDEXES(CELL)
 %
 %  Returns several common index values from a CELL that is an
 %  object of type MEASUREDDATA.
@@ -25,6 +25,7 @@ function [f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff
 %    FIT -- the fitted response, blank-subtracted
 %    SIG_VIS - The P value that determines if there is a significant visual
 %           response
+%    DIRCV - circular variance in direction space (Mazurek et al., 2014)
 %
 %  This function's beheavior may be modified by name/value pairs:
 %  Parameters (default)     | Description
@@ -65,65 +66,85 @@ A21 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' Carandini Fit'],'','
 A22 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' visual response p'],'','');
 A23 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' visual response p'],'','');
 
+A24 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' Dir Circular variance'],'','');
+A25 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' Dir Circular variance'],'','');
 
 
 f1f0 = []; dirpref = []; oiind = []; tunewidth = []; cv = []; di =[];
 sig_ori = []; blank_rate = []; pref = []; null = []; orth = [];
-fit = []; coeff_var = [];
+fit = []; coeff_var = []; 
 max_rate = []; sig_vis = [];
-if ~isempty(A1)&~isempty(A2)&~isempty(A3)&~isempty(A4),
-    if ~isempty(A15),
-        blank_rate = A15.data(1);
-    else,
-        blank_rate = 0;
-    end;
+dircv = [];
 
-    if A1.data<1, % start off w/ no filter
-        [mxf0,indf0]=max(A2.data(2,:)-A4.data.spont(1));
-        [mxf1,indf1]=max(A3.data(2,:));
-        if mxf0>mxf1,
-            ind = indf0;
-            oiind=fit2fitoi(A2.data, 0);
-            oiind=A9.data;
-            tunewidth=A5.data;
-            cv = A7.data;
-            if ~isempty(A11), % might not have dir info if only ori run
-	            di = A11.data;
-            else,
-                    di = NaN;
-            end;
-            sig_ori = A13.data;
-            max_rate = A16.data(1);
-            [mxrate,coeff_var] = neural_maxrate_variability(A18.data);
-            pref = fit2pref(A20.data) - blank_rate;
-            null = fit2null(A20.data) - blank_rate;
-            orth = fit2orth(A20.data) - blank_rate;
-            fit = A20.data - blank_rate;
-            dirpref = A2.data(1,ind);
-            sig_vis = A22.data(1);
-        else,
-            ind = indf1;
-            oiind=fit2fitoi(A3.data, 0);
-            oiind=A10.data;
-            tunewidth = A6.data;
-            cv = A8.data;
-            if ~isempty(A12), % might not have dir info if only ori run
-                di = A12.data;
-            else,
-                di = NaN;
-            end;
-            sig_ori = A14.data;
-            max_rate = A17.data(1);            
-            [mxrate,coeff_var] = neural_maxrate_variability(A19.data);            
-            pref = fit2pref(A21.data);
-            null = fit2null(A21.data);
-            orth = fit2orth(A21.data);
-            fit = A21.data - blank_rate;
-            dirpref = A3.data(1,ind);
-            sig_vis = A23.data(1);            
-        end;
-        f1f0 = A3.data(2,ind)./(A2.data(2,ind)+A3.data(2,ind));
-    end;
-    if A1.data>0.05, tunewidth = 90; end;
+if ~isempty(A1)&~isempty(A2)&~isempty(A3)&~isempty(A4),
+	if ~isempty(A15),
+		blank_rate = A15.data(1);
+	else,
+		blank_rate = 0;
+	end;
+
+	if A1.data<1, % start off w/ no filter
+		[mxf0,indf0]=max(A2.data(2,:)-A4.data.spont(1));
+		[mxf1,indf1]=max(A3.data(2,:));
+		if mxf0>mxf1,
+			ind = indf0;
+			oiind=fit2fitoi(A2.data, 0);
+			oiind=A9.data;
+			tunewidth=A5.data;
+			cv = A7.data;
+			if ~isempty(A11), % might not have dir info if only ori run
+				di = A11.data;
+				if ~isempty(A24),
+					dircv = A24.data;
+				else,
+					dircv = cell2dircircular_variance(cell, ['SP F0 ' ColorType ' ']);
+				end;
+			else,
+				di = NaN;
+				dircv = NaN;
+			end;
+		
+			sig_ori = A13.data;
+			max_rate = A16.data(1);
+			[mxrate,coeff_var] = neural_maxrate_variability(A18.data);
+			pref = fit2pref(A20.data) - blank_rate;
+			null = fit2null(A20.data) - blank_rate;
+			orth = fit2orth(A20.data) - blank_rate;
+			fit = A20.data - blank_rate;
+			dirpref = A2.data(1,ind);
+			sig_vis = A22.data(1);
+		else,
+			ind = indf1;
+			oiind=fit2fitoi(A3.data, 0);
+			oiind=A10.data;
+			tunewidth = A6.data;
+			cv = A8.data;
+			if ~isempty(A12), % might not have dir info if only ori run
+				di = A12.data;
+				if ~isempty(A25),
+					dircv = A25.data;
+				else,
+					dircv = cell2dircircular_variance(cell, ['SP F1 ' ColorType ' ']);
+				end
+			else,
+				di = NaN;
+				dircv = NaN;
+			end;
+			sig_ori = A14.data;
+			max_rate = A17.data(1);            
+			[mxrate,coeff_var] = neural_maxrate_variability(A19.data);            
+			pref = fit2pref(A21.data);
+			null = fit2null(A21.data);
+			orth = fit2orth(A21.data);
+			fit = A21.data - blank_rate;
+			dirpref = A3.data(1,ind);
+			sig_vis = A23.data(1);            
+		end;
+		f1f0 = A3.data(2,ind)./(A2.data(2,ind)+A3.data(2,ind));
+	end;
+
+	if A1.data>0.05,
+		tunewidth = 90;
+	end;
 end;
 
