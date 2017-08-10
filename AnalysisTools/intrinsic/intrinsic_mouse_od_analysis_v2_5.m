@@ -26,7 +26,7 @@ function [outputs] = intrinsic_mouse_od_analysis_v2_5(base_directory, ipsi_direc
 %   Force_draw_new_ROI (0)         | Should we force the user to
 %                                  |   redraw an ROI even if it
 %                                  |   already exists?
-%   Stims_to_combine [1 2]         | Stim IDs that should be averaged
+%   Stims_to_combine [2 3]         | Stim IDs that should be averaged
 %                                  |   together
 %   Response_sign (-1)             | Sign of the response (usually dR/R is
 %                                  |   negative), should be -1 or 1
@@ -36,7 +36,7 @@ function [outputs] = intrinsic_mouse_od_analysis_v2_5(base_directory, ipsi_direc
 %
 
 Force_draw_new_ROI = 0;
-Stims_to_combine = [1 2];
+Stims_to_combine = [2 3];
 Response_sign = -1;
 image_scale = [ -0.001 0.001];
 verbose = 1;

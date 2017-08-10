@@ -1,5 +1,5 @@
 %plot features of intrinsic_mouse_md_sf_analysis2.m"
-function testingRealm = plotintrinsic_images_figures(base_directory, animal_number, varargin)
+function Sfdat = plotintrinsic_images_figures(base_directory, animal_number, varargin)
 
 image_scale = [ -0.001 0.001];
 
@@ -44,7 +44,7 @@ end;
 
 sf_resp_info = z;
 
-ODstruct = intrinsic_mouse_od_analysis_v2_5(base_directory, sf_resp_info.CONTRAHEM_CONTRAEYE, sf_resp_info.CONTRAHEM_IPSIEYE,varargin{:});
+ODstruct = intrinsic_mouse_od_analysis_v2_5(base_directory, sf_resp_info.CONTRAHEM_IPSIEYE,sf_resp_info.CONTRAHEM_CONTRAEYE,varargin{:});
 f2 = figure;
 subplot(2,2,1);
 bar(ODstruct.odindex);
@@ -73,6 +73,8 @@ for i=2:4,
     x_sfs=Sfdat(myindex).sfs;
     y_response=Sfdat(myindex).sf_responses;
     scatter(x_sfs,y_response);
+    hold on
+    plot(x_sfs,Sfdat(myindex).Cdogfit.fitvalues_dog,'k-');
     set(gca,'xscale','log');
     title(titles(i));
     box off;

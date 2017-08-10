@@ -97,7 +97,7 @@ success = intrinsic_mouse_monobino(base_directory, z.IPSIHEM_IPSIEYE, z.IPSIHEM_
 success = intrinsic_mouse_monobino(base_directory, z.CONTRAHEM_CONTRAEYE, z.CONTRAHEM_IPSIEYE, 'Force_draw_new_ROI', Force_draw_new_ROI, ...
       'stimulus_number', stimulus_number);
 
-output_blank = emptystruct('condition_name','roi_name', 'sfs','sf_responses','blank_response','line','log','logthreshold','base_directory','dirname');  % chelsea add fields here
+output_blank = emptystruct('condition_name','roi_name', 'sfs','sf_responses','blank_response','line','log','logthreshold','base_directory','dirname','Cgaussfit','Cdogfit');  % chelsea add fields here
 
 outputs = output_blank;
 
@@ -153,9 +153,9 @@ for i=1:length(names),
 
 		[output_here.log.slope,output_here.log.y_intercept] = quickregression(log10(output_here.sfs(:)), output_here.sf_responses(:),0.05); % (:) for columns
 		output_here.log.x_intercept = -output_here.log.y_intercept / output_here.log.slope;
-
-        %output_here.gaussfit = chelsea_gaussfit(output_here.sfs(:), output_here.sf_responses(:);
-        %output_here.dogfit = chelsea_dogfit(output_here.sfs(:), output_here.sf_responses(:);        
+ 
+		[output_here.Cgaussfit.Rsp, output_here.Cgaussfit.Rp, output_here.Cgaussfit.P, output_here.Cgaussfit.sigm, output_here.Cgaussfit.FITCURVE, output_here.Cgaussfit.ERR] = Chelsea_gaussfit(output_here.sfs(:), output_here.sf_responses(:))
+		[output_here.Cdogfit.A, output_here.Cdogfit.dog_sse, output_here.Cdogfit.fitvalues_dog] = Chelsea_dogfit(output_here.sfs(:), output_here.sf_responses(:));        
         
 		outputs(end+1) = output_here;
 	end;
@@ -164,4 +164,3 @@ end;
 if save_in_directory,
 	save([base_directory filesep savenameprefix int2str(animal_number) '.mat'],'outputs','parameters','-mat');
 end;
-
