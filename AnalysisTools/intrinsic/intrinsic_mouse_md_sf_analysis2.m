@@ -38,6 +38,8 @@ function [outputs] = intrinsic_mouse_md_sf_analysis2(base_directory, animal_numb
 %   roi_name           | The roi being evaluated (i.e., 'roi_binoV1' or 'roi_monoV1')
 %   sfs                | The SFs tested
 %   sf_responses       | The responses to each SF tested
+%   sf_responses_raw   | The responses to each SF tested without a reference region subtracted
+%   sf_reference_region| The responses in the reference region to each SF tested
 %   blank_response     | The response to the blank stimulus
 %   line               | Structure with the parameters of the best fit line of SF responses
 %   log                | Structure with the parameters the best fit line of SF responses vs. log10 of SF
@@ -97,7 +99,7 @@ success = intrinsic_mouse_monobino(base_directory, z.IPSIHEM_IPSIEYE, z.IPSIHEM_
 success = intrinsic_mouse_monobino(base_directory, z.CONTRAHEM_CONTRAEYE, z.CONTRAHEM_IPSIEYE, 'Force_draw_new_ROI', Force_draw_new_ROI, ...
       'stimulus_number', stimulus_number);
 
-output_blank = emptystruct('condition_name','roi_name', 'sfs','sf_responses','blank_response','line','log','logthreshold','base_directory','dirname','Cgaussfit','Cdogfit');  % chelsea add fields here
+output_blank = emptystruct('condition_name','roi_name', 'sfs','sf_responses','sf_responses_raw','sf_reference_region','blank_response','line','log','logthreshold','base_directory','dirname','Cgaussfit','Cdogfit');  % chelsea add fields here
 
 outputs = output_blank;
 
@@ -129,6 +131,9 @@ for i=1:length(names),
 
 		output_here.sfs = [];
 		output_here.sf_responses = [];
+		output_here.sf_responses_raw = [];
+		output_here.sf_reference_region = [];
+
 		for n=1:numStims(stimlist.saveScript),
 			stim = get(stimlist.saveScript,n);
 			p = getparameters(stim);
@@ -137,6 +142,8 @@ for i=1:length(names),
 				s = load([base_directory filesep dirname filesep 'singlecondition' sprintf('%.4d',n) '.mat']);
 				s = s.imgsc;
 				output_here.sf_responses(end+1) = Response_sign * ( mean(s(roi_indexes)) - mean(s(background_roi_indexes)) );
+				output_here.sf_responses_raw(end+1) = Response_sign * ( mean(s(roi_indexes)) );
+				output_here.sf_reference_region(end+1) = Response_sign * ( mean(s(background_roi_indexes)) );
 			elseif isfield(p,'isblank'), % is a blank stimulus
 				% background
 				s = load([base_directory filesep dirname filesep 'singlecondition' sprintf('%.4d',n) '.mat']);

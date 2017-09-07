@@ -10,6 +10,9 @@ function createsingleconditions(dirname, multiplier, meanfilteropts, medianfilte
 %    stimorder.mat -- should have variable 'stimorder' that has the display order of stimuli
 %    stimNNNNImage.mat -- should have variable 'img' that has the individual response 
 %                         to each stimulus (numbered from 0)
+%    triggers_to_ignore.txt -- optional text file that contains trigger numbers that should
+%                              be ignored (perhaps because there was an acquisition problem
+%                              or lighting issue)
 %
 %  Inputs: 
 %         DIRNAME -- the directory name to examine
@@ -32,6 +35,14 @@ stims = unique(so);
 
 sc = {};
 
+triggers_to_ignore = [];
+
+triggers_to_ignore_filename = [fixpath(dirname) 'triggers_to_ignore.txt'];
+
+if exist(triggers_to_ignore_filename,'file'),
+	triggers_to_ignore = load(triggers_to_ignore,'-ascii');
+end
+
 progfilename = [fixpath(dirname) 'singleconditionprogress.mat'];
 
 if exist(progfilename)==2,
@@ -42,6 +53,9 @@ if exist(progfilename)==2,
 	if ~isfield(prog,'signalframes'),
 		prog.signalframes = [];
 	end;
+	if ~isfield(prog, 'triggers_to_ignore'),
+		prog.triggers_to_ignore = [];
+	end
 else,
 	for i=1:length(stims), prog.existence{i} = []; end;
 	prog.meanfilteropts = meanfilteropts;
@@ -49,6 +63,7 @@ else,
 	prog.multiplier = multiplier;
 	prog.baselineframes = baselineframes;
 	prog.signalframes = signalframes;
+	prog.triggers_to_ignore = triggers_to_ignore;
 end;
 
 for i=1:length(stims),
@@ -57,7 +72,10 @@ for i=1:length(stims),
 	% first check existence data to see if we need to update
 	match_all_frames = 1;
 	for j=1:length(inds),
-		existence(j) = exist([fixpath(dirname) 'stim' sprintf('%0.4d',inds(j)) 'Image.mat']);
+		existence(j) = exist([fixpath(dirname) 'stim' sprintf('%0.4d',inds(j)) 'Image.mat'],'file');
+		if ~isempty(triggers_to_ignore),
+			existence(j) = existence(j) & ~any(inds(j)==triggers_to_ignore);
+		end;
 		if existence(j),
 			g = load([fixpath(dirname) 'stim' sprintf('%0.4d',inds(j)) 'Image.mat'],'baselineframes','signalframes');
 			match_all_frames = match_all_frames & ...
@@ -66,7 +84,7 @@ for i=1:length(stims),
 	end;
 	if ~eqlen(existence,prog.existence{i})|...
 		~eqlen(medianfilteropts,prog.medianfilteropts)|...
-		~eqlen(meanfilteropts,prog.meanfilteropts)|~match_all_frames,
+		~eqlen(meanfilteropts,prog.meanfilteropts)|~eqlen(triggers_to_ignore,prog.triggers_to_ignore)|~match_all_frames,
 		disp(['updating single condition ' int2str(i) '.']);
 		stimdata = [];
 		for j=1:length(inds),
@@ -90,10 +108,40 @@ for i=1:length(stims),
 		save([fixpath(dirname) 'singlecondition' sprintf('%0.4d',stims(i)) '.mat'],'imgsc');
 		imwrite(uint16( round(2^15+multiplier*imgsc)),...
 			[fixpath(dirname) 'singlecondition' sprintf('%0.4d',stims(i)) '.tiff'],...
-			'tif');,
+			'tif');
+
+		% now compute standard deviation
+
+		stimdata = []; 
+		for j=1:length(inds),
+			if existence(j)==2,
+				g = load([fixpath(dirname) 'stim' sprintf('%0.4d',inds(j)) 'Image.mat']);
+				%stimdata = cat(3,stimdata,g.img);
+				if isempty(stimdata), stimdata = ((g.img-imgsc).^2)./(double(sum(existence>0))-1);
+				else, stimdata = stimdata + ((g.img-imgsc).^2)./(double(sum(existence>0))-1);
+				end;
+			end;
+		end;
+		stimdata = sqrt(stimdata);
+		
+		% now write it
+		imgsc = nanmean(stimdata,3);
+		% if any filter options are specified, then apply them
+		if ~isempty(meanfilteropts),
+			imgsc=imgsc-conv2(imgsc,ones(meanfilteropts)/sum(sum(ones(meanfilteropts))),'same');
+		end;
+		if ~isempty(medianfilteropts),
+			imgsc=medfilt2(imgsc,medianfilteropts*[1 1]);
+		end;
+		save([fixpath(dirname) 'singlecondition_stddev' sprintf('%0.4d',stims(i)) '.mat'],'imgsc');
+		imwrite(uint16( round(multiplier*imgsc)),...
+			[fixpath(dirname) 'singlecondition_stddev' sprintf('%0.4d',stims(i)) '.tiff'],...
+			'tif');
+
 		prog.existence{i} = existence;
 	end;
 end;
 
 existence = prog.existence;
 save(progfilename,'existence','medianfilteropts','meanfilteropts','multiplier');
+
