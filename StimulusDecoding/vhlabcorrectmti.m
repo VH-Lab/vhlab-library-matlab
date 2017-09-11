@@ -1,4 +1,4 @@
-function [mti2,starttime] = vhlabcorrectmti(mti, filename,globaltime)
+function [mti2,starttime] = vhlabcorrectmti(mti, filename, globaltime)
 
 % TPCORRECTMTI - Correct NewStim MTI based on recorded times
 %
