@@ -82,7 +82,6 @@ for i=1:length(stims),
 				 (eqlen(g.baselineframes,prog.baselineframes)&eqlen(g.signalframes,prog.signalframes));
 		end;
 	end;
-
 	if ~eqlen(existence,prog.existence{i})|...
 		~eqlen(medianfilteropts,prog.medianfilteropts)|...
 		~eqlen(meanfilteropts,prog.meanfilteropts)|~eqlen(triggers_to_ignore,prog.triggers_to_ignore)|~match_all_frames,
@@ -112,10 +111,9 @@ for i=1:length(stims),
 			'tif');
 
 		% now compute standard deviation
-
 		stimdata = []; 
 		for j=1:length(inds),
-			if existence(j)==1,
+			if existence(j),
 				g = load([fixpath(dirname) 'stim' sprintf('%0.4d',inds(j)) 'Image.mat']);
 				%stimdata = cat(3,stimdata,g.img);
 				if isempty(stimdata), stimdata = ((g.img-imgsc).^2)./(double(sum(existence>0))-1);
