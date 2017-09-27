@@ -3,7 +3,11 @@ function [responses] = intrinsic_roi_responses(dirname, roi, varargin)
 %
 % RESPONSES = INTRINSIC_ROI_RESPONSES(DIRNAME, ROI, ...)
 %
-% RESPONSES is a 4xN 
+% RESPONSES is a 4xN. The 1st row is the stimulus values (NaN for a blank
+% stimulus), the 2nd row is the mean responses, the 3rd row is the
+% standard deviation of the responses, and the 4th row is the standard
+% error.
+%
 %
 % Note: this function does not check to see if single condition images are up-to-date. For this, use
 % CREATESINGLECONDITIONS.
