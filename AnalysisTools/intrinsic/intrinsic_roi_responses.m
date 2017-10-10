@@ -40,11 +40,12 @@ assign(varargin{:});
 
 responses = nan(4,numel(Stims));
 
+sv=sv.stimvalues;
 sv = sv(Stims);
 
 stimlist = load([dirname filesep 'stims.mat'],'-mat');
 
-  % load single condition progress file
+% load single condition progress file
 prog = load([fixpath(dirname) 'singleconditionprogress.mat']);
 
 
@@ -52,7 +53,7 @@ for n=1:numel(Stims),
 	stim = get(stimlist.saveScript,Stims(n));
 	p = getparameters(stim);
 	if isfield(p,'isblank'),
-		isblank, = p.isblank;
+		isblank = p.isblank;
 	else,
 		isblank = 0;
 	end
@@ -64,8 +65,7 @@ for n=1:numel(Stims),
 		responses(2,n) = responses(2,n) - mean(s(Reference_roi));
 	end;
 	s2 = load([dirname filesep 'singlecondition_stddev' sprintf('%.4d',Stims(n)) '.mat']);
-	s2 = s.imgsc;
+	s2 = s2.imgsc;
 	responses(3,n) = Response_sign* mean(s2(roi));
 	responses(4,n) = responses(3,n) / sqrt(sum(prog.existence{Stims(n)}>0));
 end
-
