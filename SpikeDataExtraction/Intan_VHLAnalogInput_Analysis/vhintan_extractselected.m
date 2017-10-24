@@ -55,7 +55,7 @@ T = getalltests(ds);
 [s,ok] = listdlg('PromptString','Select directories to extract','SelectionMode','multiple','ListString',T);
 
 if ok,
-    VHLabGlobals;
+    RunExperimentGlobals;
     usep = ~isempty(VH_UseParallel);
     if usep,
         usep = VH_UseParallel;
