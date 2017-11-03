@@ -13,7 +13,7 @@ s.mti = s.mti(inds_nottotrim);
 
 s = unloopstimscripttimestruct(s); % remove any loops
 
-newslist = DemultiplexScriptMTI(s,paramname2);
+newslist = DemultiplexScriptMTI(s,paramname2,1);
 
 co = {};
 
