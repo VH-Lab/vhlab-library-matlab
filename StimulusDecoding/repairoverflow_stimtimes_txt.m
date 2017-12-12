@@ -1,7 +1,8 @@
-function repairoverflow_stimtimes_txt(dirname, stimtimes_file, stims_mat_file, goodframes)
+function repairoverflow_stimtimes_txt(dirname, skiplineafteroverflow, stimtimes_file, stims_mat_file, goodframes)
 % REPAIROVERFLOW_STIMTIMES_TXT - repair stimtimes.txt file where numstims > 255
 %
-% REPAIROVERFLOW_STIMTIMES_TXT(DIRNAME, STIMTIMES_FILENAME, STIMS_MAT, GOODFRAMES)
+% REPAIROVERFLOW_STIMTIMES_TXT(DIRNAME, SKIPLINEAFTEROVERFLOW, ...
+%      STIMTIMES_FILENAME, STIMS_MAT, GOODFRAMES)
 %
 % This function attempts to reconcile the stimulus that was displayed on
 % the stimulus computer and saved as STIMS_MAT and the stimulus trigger times
@@ -9,6 +10,10 @@ function repairoverflow_stimtimes_txt(dirname, stimtimes_file, stims_mat_file, g
 % It attempts to fix errors that occur when the stimulus computer tries to
 % express stimulus numbers greater than 255 (which it cannot, given it has 
 % 8 stimulus bits).
+%
+% In some recording, after an overflow error, there is an extra line that
+% needs to be removed. If that is the case, set SKIPLINEAFTEROVERFLOW to 1.
+% Otherwise, it can be 0.
 %
 % If STIMTIMES_FILENAME is not provided, 'stimtimes.txt' is used.
 % If STIMS_MAT filename is not provided, 'stims.mat' is used.
@@ -23,14 +28,18 @@ function repairoverflow_stimtimes_txt(dirname, stimtimes_file, stims_mat_file, g
 fout = ['stimtimes_repaired.txt'];
 
 if nargin<2,
+    skiplineafteroverflow = 0;
+end
+
+if nargin<3,
 	stimtimes_file = 'stimtimes.txt';
 end;
 
-if nargin<3,
+if nargin<4,
 	stims_mat = 'stims.mat';
 end;
 
-if nargin<4,
+if nargin<5,
 	goodframes = 10;
 end
 
@@ -67,7 +76,7 @@ while i<=numel(do),
 		frametimes_new{i} = frametimes{stimtimes_entry}(1:goodframes);
 	end
 	stimtimes_entry = stimtimes_entry + 1;
-	if recordthisentry&(do(i)>=255), % skip an extra entry
+	if skiplineafteroverflow&recordthisentry&(do(i)>=255), % skip an extra entry
 		stimtimes_entry = stimtimes_entry + 1;
 	end
 	if recordthisentry,
