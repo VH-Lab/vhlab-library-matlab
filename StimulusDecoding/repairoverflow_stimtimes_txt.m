@@ -2,7 +2,7 @@ function repairoverflow_stimtimes_txt(dirname, skiplineafteroverflow, stimtimes_
 % REPAIROVERFLOW_STIMTIMES_TXT - repair stimtimes.txt file where numstims > 255
 %
 % REPAIROVERFLOW_STIMTIMES_TXT(DIRNAME, SKIPLINEAFTEROVERFLOW, ...
-%      STIMTIMES_FILENAME, STIMS_MAT, GOODFRAMES)
+%      STIMTIMES_FILENAME, STIMS_MAT, GOODFRAMES) 
 %
 % This function attempts to reconcile the stimulus that was displayed on
 % the stimulus computer and saved as STIMS_MAT and the stimulus trigger times
