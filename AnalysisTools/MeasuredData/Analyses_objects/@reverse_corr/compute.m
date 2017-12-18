@@ -71,7 +71,10 @@ if fpc,
          [B,dummy,inds]=unique(in.counts{m}{c}(o,:));
          for jj=1:length(B),
            if B(jj)~=0,
-             for kk=1:B(jj),indx=cat(2,indx,find(inds==jj)); end;
+             for kk=1:B(jj),
+                 newpts = find(inds==jj);
+                 indx=cat(2,indx,newpts(:)');
+             end;
            end;
          end;
          %inds=find(in.counts{m}{c}(o,:));
