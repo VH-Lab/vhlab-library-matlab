@@ -17,7 +17,7 @@ end;
 
 spiketimes_local = celldirspiketimes(ds, dirname, mycell);
 
-sp_rev_corr = spiketimes_rc(ds,dirname,spiketimes_local, 'mnt',-0.1, 'mt', 0.5, 'step', 0.001,'usespike01',1);
+sp_rev_corr = spiketimes_rc(ds,dirname,spiketimes_local, 'mnt',-0.1, 'mt', 0.2, 'step', 0.001,'usespike01',1);
 out=rc_plot(sp_rev_corr);
 
 

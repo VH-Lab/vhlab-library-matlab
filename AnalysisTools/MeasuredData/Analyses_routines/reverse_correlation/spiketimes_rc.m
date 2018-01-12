@@ -70,6 +70,7 @@ good_pres = ismember(1:length(do), stim_pres_to_include) & ~ismember(1:length(do
 good_pres_indexes = find(good_pres);
 
 rev_corr = [];
+rev_corr_raw = [];
 xc_stimsignal = [];
 xc_stimstim = [];
 
@@ -99,19 +100,21 @@ for i=1:good_pres_indexes,
 	if usespike01,
 		t_local = (frameTimes{i}(1)-5) : step : (frameTimes{i}(end)+1) ;
 		spike01 = histc(spiketimes,t_local);
-		[rev_corr_,dummy,xc_stimsignal_,xc_stimstim]=reverse_correlation_mv_stepfunc(spike01, t_local, kerneltimes,...
+		[rev_corr_,rev_corr_raw_,xc_stimsignal_,xc_stimstim]=reverse_correlation_mv_stepfunc(spike01, t_local, kerneltimes,...
 			frameTimes{i}(:)',cols', 'dt',step,'dx',1,'xc_stimstim',xc_stimstim,'DoMedFilter',DoMedFilter,...
 			'MedFilterWidth',MedFilterWidth);
 	else,
-		[rev_corr_, dummy, xc_stimsignal_, xc_stimstim] = reverse_correlation_stepfunc(spiketimes, [], ...
+		[rev_corr_, rev_corr_raw_, xc_stimsignal_, xc_stimstim] = reverse_correlation_stepfunc(spiketimes, [], ...
 			kerneltimes, frameTimes{i}(:)',cols','dt',step,'dx',1,'xc_stimstim',xc_stimstim,'DoMedFilter',DoMedFilter,...
 			'MedFilterWidth',MedFilterWidth);
 	end;
 	rev_corr = cat(3,rev_corr,rev_corr_);
+	rev_corr_raw = cat(3,rev_corr_raw,rev_corr_raw_);
 	xc_stimsignal = cat(3,xc_stimsignal,xc_stimsignal_);
 end;
 
 avg_revcorr = mean(rev_corr);
+avg_revcorr_raw = mean(rev_corr_raw);
 avg_xcstimsignal = mean(xc_stimsignal,3);
 
 [Rinv,R] = whitening_filter_from_autocorr(xc_stimstim,length(kerneltimes));
@@ -122,6 +125,6 @@ if DoMedFilter,
 	avg_xc_deconvolved = medfilt1(avg_xc_deconvolved, MedFilterWidth);
 end;
 
-out = var2struct('rev_corr','xc_stimsignal','xc_stimstim','avg_revcorr','avg_xcstimsignal',...
+out = var2struct('rev_corr','rev_corr_raw','xc_stimsignal','xc_stimstim','avg_revcorr','avg_revcorr_raw','avg_xcstimsignal',...
 	'avg_xc_deconvolved','gridsize','kerneltimes');
 

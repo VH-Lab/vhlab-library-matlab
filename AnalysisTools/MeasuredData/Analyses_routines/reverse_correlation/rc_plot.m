@@ -38,7 +38,7 @@ for i=1:2,
                 bsvar = input.xc_stimsignal;
         end;
 
-        subplot(2,2,1+2*(i-1));
+        subplot(2,3,1+3*(i-1));
         if size(plotvar,2)==1,
                 imagesc(1:V,input.kerneltimes,plotvar);
                 set(gca,'ydir','reverse');
@@ -51,12 +51,21 @@ for i=1:2,
         end;
         title(titles{i});
         colormap(gray(256));
-        subplot(2,2,2+2*(i-1));
+        subplot(2,3,2+3*(i-1));
         [bs{i},bsimg{i}] = rc_bootstrap(bsvar,1000);
         image(1:V,input.kerneltimes,bsimg{i});
         set(gca,'ydir','normal');
         xlabel('Space (grid positions)');
         ylabel('Time (s)');
+        
+        subplot(2,3,3+3*(i-1));
+        plotvar_mn = mean(plotvar,1);
+        plotvar_mn = reshape(plotvar_mn,input.gridsize(1), input.gridsize(2));
+        imagesc(1:input.gridsize(1),1:input.gridsize(2),plotvar_mn);
+        set(gca,'ydir','reverse');
+        xlabel('Space X (grid positions)');
+        ylabel('Space Y (grid positions)');
+        
 end;
 
 out = var2struct('bs','bsimg');
