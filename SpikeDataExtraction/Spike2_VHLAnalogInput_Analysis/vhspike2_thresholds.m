@@ -1,7 +1,7 @@
 % VHSPIKE2_THRESHOLDS - Describes the vhspike2_thresholds.txt file for multichannel analysis
 %
-%   In each directory that contains data that was recorded by the VH Lab
-%   LabView multichannel analog input program, there should be a file
+%   In each directory that contains data that was recorded by the 
+%   Spike2 multichannel analog input program, there should be a file
 %   called "vhspike2_thresholds.txt" that describes the thresholds that should
 %   be used for spike detection.
 %

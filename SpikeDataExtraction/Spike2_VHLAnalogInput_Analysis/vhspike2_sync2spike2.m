@@ -3,19 +3,17 @@ function [shift,scale] = vhspike2_sync2spike2(dirname, varargin)
 %
 %  [SHIFT,SCALE] = VHSPIKE2_SYNC2SPIKE2(DIRNAME)
 %
-%  Calculates the shift between the Multichannel LabView records that are stored
-%  in DIRNAME in *.rhd files and the stimulus trigger records that are stored in
+%  Calculates the shift between the Multichannel Spike2 records that are stored
+%  in DIRNAME in *.smr files and the stimulus trigger records that are stored in
 %  DIRNAME as stimtimes.txt.  DIRNAME should be provided as a full path.
 %
-%  IMPORTANT: By default, this function assumes that the stimulus triggers are
-%  found in the first digital input channel in the *.rhd file.  If these triggers
-%  are on a different channel, the file 'vhspike2_syncchannel.txt' should be created
-%  in the directory. It should have a single line that has the channel number
-%  of the vhspike2analoginput.vld file that has the stimulus triggers.
-%  
+%  This is a dummy function, as the shift is always 0 and the scale is always 1. This
+%  function exists to maintain parallel function with the VHINTAN and VHLV spike sorting
+%  tools.
+%
 %  The answer SHIFT and SCALE represents the answer to the following equation:
 %
-%     SPIKE2TIME = SHIFT + SCALE * INTAN_TIME
+%     SPIKE2TIME = SHIFT + SCALE * SPIKE2TIME
 %
 %  This is also written to the file 'vhspike2_intan2spike2time.txt' in DIRNAME.
 %  (Shift first, then scale, as ascii text values.)
@@ -27,7 +25,7 @@ function [shift,scale] = vhspike2_sync2spike2(dirname, varargin)
 %                                :  if a spike2time2intantime.txt file exists.
 %
 %
-%  See also: VHSPIKE2_INTAN2SPIKE2TIME
+%  See also: VHSPIKE2_SPIKE22SPIKE2TIME
 
 READSIZE = 10;  % read in N second steps
 OVERLAP = 0.05;  % overlap each read by 0.1 seconds

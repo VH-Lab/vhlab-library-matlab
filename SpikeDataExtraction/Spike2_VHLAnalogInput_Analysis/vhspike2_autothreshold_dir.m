@@ -40,7 +40,7 @@ stop_time = pretime;
 header_filename = vhspike2_getdirfilename(dirname);
 data_filename   = header_filename;
 
-header = read_Intan_RHD2000_header(header_filename);
+header = read_CED_SOMSMR_header(header_filename);
 
 filtermap_filename = [dirname filesep 'vhspike2_filtermap.txt'];
 if exist(filtermap_filename),
@@ -58,10 +58,13 @@ end;
 
  % step 3 - loop through the filter maps, and then loop through all channels to find thresholds
 
-[B,A] = cheby1(4,0.8,300/(0.5*header.frequency_parameters.amplifier_sample_rate),'high');
 
 for i=1:length(filtermap), 
-	[D,tot_sam,tot_time] = read_Intan_RHD2000_datafile(data_filename,header,'amp',filtermap(i).channel_list,start_time,stop_time);
+	samplerate = 1.0/double(read_CED_SOMSMR_sampleinterval(data_filename,header,...
+			filtermap(i).channel_list(1),start_time,stop_time));
+	[B,A] = cheby1(4,0.8,300/(0.5*samplerate),'high');
+
+	[D,tot_sam,tot_time] = read_Intan_RHD2000_datafile(data_filename,header,filtermap(i).channel_list,start_time,stop_time);
 	D = filtfilt(B,A,D);
 
 	% NEED TO FILTER
