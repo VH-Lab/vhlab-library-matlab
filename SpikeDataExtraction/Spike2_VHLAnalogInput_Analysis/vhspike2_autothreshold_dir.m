@@ -60,11 +60,14 @@ end;
 
 
 for i=1:length(filtermap), 
+	if numel(filtermap(i).channel_list) > 1,
+		error(['Right now, we do not know how to deal with more than one channel in a filtermap for Spike2...please submit feature request if this is needed.']); 
+	end
 	samplerate = 1.0/double(read_CED_SOMSMR_sampleinterval(data_filename,header,...
-			filtermap(i).channel_list(1),start_time,stop_time));
+			filtermap(i).channel_list(1)));
 	[B,A] = cheby1(4,0.8,300/(0.5*samplerate),'high');
 
-	[D,tot_sam,tot_time] = read_Intan_RHD2000_datafile(data_filename,header,filtermap(i).channel_list,start_time,stop_time);
+	[D,tot_sam,tot_time] = read_CED_SOMSMR_datafile(data_filename,header,filtermap(i).channel_list,start_time,stop_time);
 	D = filtfilt(B,A,D);
 
 	% NEED TO FILTER

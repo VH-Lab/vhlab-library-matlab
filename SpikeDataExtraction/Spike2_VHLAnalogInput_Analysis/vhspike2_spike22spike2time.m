@@ -8,7 +8,7 @@
 %  called automatically (that is, the user does not need to call it).
 %
 %  Example:  
-%  If you have a bunch of event times SPIKE2_EVENTS in units of Intan time,
+%  If you have a bunch of event times SPIKE2_EVENTS in units of Spike2 time,
 %  then you can convert them to Spike2 time:
 %
 %  SHIFTSCALE = load('vhspike2_spike22spike2time.txt','-ascii');

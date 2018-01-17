@@ -367,12 +367,12 @@ switch command,
 		pathname = [getpathname(ud.ds) filesep ud.dirlist{dirmenu_currentvalue} filesep];
 		header_filename = vhspike2_getdirfilename(pathname);
 		data_filename = header_filename;
-		headerstruct = read_Intan_RHD2000_header(header_filename);
-		[ud.D,dummy,total_time] = read_Intan_RHD2000_datafile(data_filename,headerstruct,'amp',channel_list,ud.start,ud.start+ud.windowsize);
-		[B,A]=cheby1(4,0.8,300/(0.5*headerstruct.frequency_parameters.amplifier_sample_rate),'high');
+		headerstruct = read_CED_SOMSMR_header(header_filename);
+		[ud.D,dummy,total_time,dummy,ud.T] = read_CED_SOMSMR_datafile(data_filename,headerstruct,channel_list,ud.start,ud.start+ud.windowsize);
+		samplerate = 1.0/double(read_CED_SOMSMR_sampleinterval(data_filename,header,filtermap(i).channel_list(1)));
+		[B,A]=cheby1(4,0.8,300/(0.5*samplerate),'high');
 		ud.D = filtfilt(B,A,ud.D);
-		t0 = read_Intan_RHD2000_datafile(data_filename,headerstruct,'time',1,0,0);
-		[ud.T,dummy,total_time] = read_Intan_RHD2000_datafile(data_filename,headerstruct,'time',1,ud.start,ud.start+ud.windowsize);
+		[dummy1,dummy2,dummy3,dummy4,t0] = read_CED_SOMSMR_datafile(data_filename,header,filtermap(i).channel_list(1),0,0);
 		ud.T = ud.T - t0;
 		set(findobj(fig,'tag','StartTxt'),'string',['Start (s, 0.. ' num2str(total_time-ud.windowsize) ')']);
 		if ud.MEDIAN_FILTER_ACROSS_CHANNELS,

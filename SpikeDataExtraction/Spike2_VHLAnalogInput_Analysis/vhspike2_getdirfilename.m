@@ -1,10 +1,10 @@
 function name = vhspike2_getdirfilename(dirname)
-% VHSPIKE2_GETDIRFILENAME - Get the Intan filename for a given directory
+% VHSPIKE2_GETDIRFILENAME - Get the Spike2 filename for a given directory
 %
 %   NAME = VHSPIKE2_GETDIRFILENAME(DIRNAME)
 %
 %   Examines the directory DIRNAME and returns the name of the 
-%   *.rhd file in that directory. If there is more than one *.SMR in DIRNAME
+%   *.smr file in that directory. If there is more than one *.smr in DIRNAME
 %   then an error is produced.
 %
 %   NAME is the full path to the file (including DIRNAME).

@@ -1,7 +1,7 @@
 function s = vhspike2_channelgrouping_default
 % VHSPIKE2_CHANNELGROUPING - Describes the vhspike2_channelgrouping.txt file for multichannel analysis
 %
-%   In each directory that contains data that was recorded by the Intan
+%   In each directory that contains data that was recorded by the Spike2
 %   multichannel analog input program, there should be a file
 %   called "vhspike2_channelgroupings.txt" that describes how signals should
 %   be grouped for spike waveform analysis.

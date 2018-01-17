@@ -1,5 +1,5 @@
 function [shift,scale] = vhspike2_sync2spike2(dirname, varargin)
-% VHSPIKE2_SYNC2SPIKE2 - Compute shift between Intan and Spike2 records
+% VHSPIKE2_SYNC2SPIKE2 - Compute shift between Spike2 and Spike2 records
 %
 %  [SHIFT,SCALE] = VHSPIKE2_SYNC2SPIKE2(DIRNAME)
 %
@@ -15,14 +15,14 @@ function [shift,scale] = vhspike2_sync2spike2(dirname, varargin)
 %
 %     SPIKE2TIME = SHIFT + SCALE * SPIKE2TIME
 %
-%  This is also written to the file 'vhspike2_intan2spike2time.txt' in DIRNAME.
+%  This is also written to the file 'vhspike2_spike22spike2time.txt' in DIRNAME.
 %  (Shift first, then scale, as ascii text values.)
 %
 %  It is possible to supply additional arguments in the form of NAME/VALUE
 %  pairs:
 % 
 %  FORCE_RERUN, default 0        :  If this is 1 then the analysis will re-run even
-%                                :  if a spike2time2intantime.txt file exists.
+%                                :  if a vhspike2_spike22spike2time.txt file exists.
 %
 %
 %  See also: VHSPIKE2_SPIKE22SPIKE2TIME
@@ -35,8 +35,7 @@ FORCE_RERUN = 0;
 
 assign(varargin{:});
 
-filename = 'vhspike2_intan2spike2time.txt';
-syncfilename = 'vhspike2_syncchannel.txt';
+filename = 'vhspike2_spike22spike2time.txt';
 
 if exist([dirname filesep filename])==2 & ~FORCE_RERUN,
 	g = load([dirname filesep filename],'-ascii');

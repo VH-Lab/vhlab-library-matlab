@@ -58,7 +58,7 @@ assign(varargin{:});
 header_filename = vhspike2_getdirfilename(dirname);
 data_filename =   header_filename; 
 
-header = read_Intan_RHD2000_header(header_filename);
+header = read_CED_SOMESMR_header(header_filename);
 
 t = [samples(1):samples(2)]/header.frequency_parameters.amplifier_sample_rate;
 
@@ -98,7 +98,6 @@ end;
  %    First, we'll loop over electrode units  (i loop)
  %           then we'll loop over the channels within the electrode units (j loop)
  
-[B,A] = cheby1(4,0.8,300/(0.5*header.frequency_parameters.amplifier_sample_rate),'high');
 
 for i=1:length(filtermap),
 
@@ -121,7 +120,7 @@ for i=1:length(filtermap),
 			progressbar(['Extracting spikes from filter group ' int2str(i)]);
 		end;
 	end;
-	t0__ = read_Intan_RHD2000_datafile(data_filename,header,'time',1,0,0);
+	[dummy1,dummy2,dummy3,dummy4,t0__] = read_CED_SOMSMR_datafile(data_filename,header,filtermap(i).channel_list(1),0,0);  
 
 	while (~end_of_file_reached),
 		if VERBOSE,
@@ -132,8 +131,12 @@ for i=1:length(filtermap),
 		end;
 		end_time = start_time + READSIZE;
 			% read the data
-		[D,tot_sam,tot_time] = read_Intan_RHD2000_datafile(data_filename,header,'amp',filtermap(i).channel_list,start_time,end_time);
-		[T,tot_sam,tot_time] = read_Intan_RHD2000_datafile(data_filename,header,'time',1,start_time,end_time);
+		if numel(filtermap(i).channel_list) > 1,
+			error(['Right now, we do not know how to deal with more than one channel in a filtermap for Spike2...please submit feature request if this is needed.']);
+		end
+		samplerate = 1.0/double(read_CED_SOMSMR_sampleinterval(data_filename,header,filtermap(i).channel_list(1)));
+		[B,A] = cheby1(4,0.8,300/(0.5*samplerate),'high');
+		[D,tot_sam,tot_time,dummy,T] = read_CED_SOMSMR_datafile(data_filename,header,'amp',filtermap(i).channel_list,start_time,end_time);
 		D = filtfilt(B,A,D);
 
 		if abs(length(D) - ((end_time - start_time) * header.frequency_parameters.amplifier_sample_rate + 1))>2, % | T(end)>100,

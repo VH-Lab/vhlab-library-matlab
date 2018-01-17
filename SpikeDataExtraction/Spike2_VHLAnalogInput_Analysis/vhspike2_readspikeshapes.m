@@ -18,17 +18,17 @@ function [spikeshapes] = vhspike2_readspikeshapes(vhspike2filename, spikechannel
 
 [pathname,fname,ext] = fileparts(vhspike2filename);
 
-h = read_Intan_RHD2000_header([pathname filesep fname '.' 'rhd']);
+h = read_CED_SOMSMR_header([pathname filesep fname '.' 'smr']);
+samplerate = 1.0/double(read_CED_SOMSMR_sampleinterval(data_filename,header,spikechannel));
 
-time_samples =  (samples / h.frequency_parameters.amplifier_sample_rate); % convert samples to time for readvhvldatafile
+time_samples =  (samples / samplerate); % convert samples to time 
 
 spikeshapes = zeros(numel(times),6*samples+1);
 
-[b,a]=cheby1(4,0.8,300/(0.5*h.frequency_parameters.amplifier_sample_rate));
-
+[B,A] = cheby1(4,0.8,300/(0.5*samplerate),'high');
  % note: might need to read in more data to filter
 for i=1:numel(times),
-	[spikeshapes(i,:)] = read_Intan_RHD2000_datafile(vhspike2filename,h,'amp',spikechannel,times(i)-3*time_samples,times(i)+3*time_sampes);
+	[spikeshapes(i,:)] = read_CED_SOMSMR_datafile(vhspike2filename,h,spikechannel,times(i)-3*time_samples,times(i)+3*time_samples);
 	spikeshapes(i,:) = filtfilt(b,a,spikeshapes(i,:));
 end;
 
