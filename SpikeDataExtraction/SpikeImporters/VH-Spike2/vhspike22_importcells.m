@@ -1,7 +1,7 @@
-function vhspike2_importcells(ds, nrs)
-% VHSPIKE2_IMPORTCELLS - Import cells from LabView that were spike-sorted with VH lab tools
+function vhspike22_importcells(ds, nrs)
+% VHSPIKE22_IMPORTCELLS - Import cells from LabView that were spike-sorted with VH lab tools
 %  
-%    VHSPIKE2_IMPORTCELLS(DS)
+%    VHSPIKE22_IMPORTCELLS(DS)
 %
 %    Imports all spikes that were acquired in LabView and were spike-sorted
 %    with the VH Lab tools.  DS is a DIRSTRUCT object that manages the 
@@ -46,7 +46,7 @@ for i=1:length(namerefs),
 
 	mycell = {}; mycellname = {};
 	for z=1:length(indlist),
-		[mycell1,mycellname1] = vhspike2_loadcell(ds,namerefs(i).name,namerefs(i).ref,indlist(z));
+		[mycell1,mycellname1] = vhspike22_loadcell(ds,namerefs(i).name,namerefs(i).ref,indlist(z));
 	    if ~isempty(mycell1), mycell{end+1} = mycell1; mycellname{end+1} = mycellname1; end;
 	end;
 	

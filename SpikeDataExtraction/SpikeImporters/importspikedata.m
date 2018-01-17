@@ -36,7 +36,7 @@ if ~A,
 end;
 
     % maybe down the road it can figure this out from the directory contents
-importers_we_know = {'vhspike2_importcells','vhlv_importcells','vhintan_importcells','vhplexsp2_importcells','vhplexLV_importcells','vhwillow_importcells'};
+importers_we_know = {'vhspike2_importcells','vhlv_importcells','vhintan_importcells','vhplexsp2_importcells','vhplexLV_importcells','vhwillow_importcells';};
 
 for i=1:length(importers_we_know),
 	disp(['Importing from ' importers_we_know{i} '...']);
