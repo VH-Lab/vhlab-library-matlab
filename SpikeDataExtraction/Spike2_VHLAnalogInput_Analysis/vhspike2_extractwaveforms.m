@@ -58,9 +58,8 @@ assign(varargin{:});
 header_filename = vhspike2_getdirfilename(dirname);
 data_filename =   header_filename; 
 
-header = read_CED_SOMESMR_header(header_filename);
+header = read_CED_SOMSMR_header(header_filename);
 
-t = [samples(1):samples(2)]/header.frequency_parameters.amplifier_sample_rate;
 
 filtermap_filename = [dirname filesep 'vhspike2_filtermap.txt'];
 if exist(filtermap_filename),
@@ -136,10 +135,11 @@ for i=1:length(filtermap),
 		end
 		samplerate = 1.0/double(read_CED_SOMSMR_sampleinterval(data_filename,header,filtermap(i).channel_list(1)));
 		[B,A] = cheby1(4,0.8,300/(0.5*samplerate),'high');
-		[D,tot_sam,tot_time,dummy,T] = read_CED_SOMSMR_datafile(data_filename,header,'amp',filtermap(i).channel_list,start_time,end_time);
+		[D,tot_sam,tot_time,dummy,T] = read_CED_SOMSMR_datafile(data_filename,header,filtermap(i).channel_list,start_time,end_time);
 		D = filtfilt(B,A,D);
+        t = [samples(1):samples(2)]/samplerate;
 
-		if abs(length(D) - ((end_time - start_time) * header.frequency_parameters.amplifier_sample_rate + 1))>2, % | T(end)>100,
+		if abs(length(D) - ((end_time - start_time) * samplerate + 1))>2, % | T(end)>100,
 			end_of_file_reached = 1;
 		end;
 		
@@ -201,7 +201,7 @@ for i=1:length(filtermap),
 
 			% now that we have the locations, let's read the waveforms
 
-				wavetimes{k} = cat(1,wavetimes{k},-t0__+T(my_locations));
+				wavetimes{k} = cat(1,wavetimes{k},-t0__+colvec(T(my_locations)));
 
 				sample_offsets = repmat([samples(1):samples(2)],1,length(channelgrouping(k).channel_list));
 				channel_offsets = repmat(my_chan_list(:)',diff(samples)+1,1);
@@ -219,7 +219,7 @@ for i=1:length(filtermap),
 					myp.name = channelgrouping(k).name;
 					myp.ref = channelgrouping(k).ref;
 					myp.comment = dirname;
-					myp.samplingrate = header.frequency_parameters.amplifier_sample_rate;
+					myp.samplingrate = samplerate;
 					myfid = newvhlspikewaveformfile(changrouping_wavefname{k},myp);
 					changrouping_created(k) = 1;
 					fclose(myfid);
