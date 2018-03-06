@@ -60,7 +60,7 @@ for i=1:2,
         
         subplot(2,3,3+3*(i-1));
         plotvar_mn = mean(plotvar,1);
-        plotvar_mn = reshape(plotvar_mn,input.gridsize(1), input.gridsize(2));
+        plotvar_mn = reshape(plotvar_mn,input.gridsize(2), input.gridsize(1));
         imagesc(1:input.gridsize(1),1:input.gridsize(2),plotvar_mn);
         set(gca,'ydir','reverse');
         xlabel('Space X (grid positions)');

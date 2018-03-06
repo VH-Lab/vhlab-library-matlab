@@ -36,45 +36,65 @@ else,
 	stsz = stepsize;
 end;
 
-if ischar(dirname),
-    s = getstimscripttimestruct(ds,dirname);
-    [s.stimscript,tempmti,inds_nottotrim] = stimscriptmtitrim(s.stimscript,s.mti,1);
-    s.mti = tpcorrectmti(s.mti,[getpathname(ds) filesep dirname filesep 'stimtimes.txt'],1);
-    s.mti = s.mti(inds_nottotrim);
-else,
-    s = dirname{1};
-    dirname = dirname{2};
-end;
-
+avgstim = [];
+numspikes = 0;
 kerneltimes = mnt:stsz:mt;
 
-do = getDisplayOrder(s.stimscript);
+ % need some way to extract dirnames
 
-avgstim = [];
+skipread = 0;
 
-numspikes = 0;
-
-for i=1:length(do),
-	stim = get(s.stimscript,do(i));
-	% analyze all stims
-	p = getparameters(stim),
-	V = getgridvalues(stim);
-	[X,Y] = getgrid(stim); % get grid dimensions
-	gridsize = [X Y];
-	% grayscale
-	if isa(stim,'stochasticgridstim'),
-		colsgray = rescale(mean(p.values,2),[0 256],[-1 1]);
-	elseif isa(stim,'blinkingstim'),
-		colsgray = rescale(mean([p.BG;p.value],2),[0 256],[0 1]);
-	end;
-	cols = colsgray(V);
-	if min(size(cols))==1, cols = cols'; end;
-	stimoffsets = s.mti{i}.frameTimes;
-	spiketimes=get_data(mycell,[s.mti{i}.frameTimes(1)-10 s.mti{i}.frameTimes(end)+10],2);
-	numspikes = numspikes + length(spiketimes);
-	avgstim_=spike_triggered_average_stepfunc(spiketimes,kerneltimes,s.mti{i}.frameTimes,cols');
-	avgstim = cat(3,avgstim,avgstim_);
+if iscell(dirname),
+	% need to figure out whether it is just a list of directories, or what
+	if numel(dirname)==2,
+		if isstruct(dirname{1}),
+			dirname = {dirname{2}};
+			s = dirname{1};
+			skipread = 1;
+		end;
+	end
+else,
+	dirname = {dirname};
 end;
+
+dirname,
+
+for i=1:numel(dirname),
+	if ~skipread,
+		dirname{i}
+		s = getstimscripttimestruct(ds,dirname{i});
+		[s.stimscript,tempmti,inds_nottotrim] = stimscriptmtitrim(s.stimscript,s.mti,1);
+		s.mti = tpcorrectmti(s.mti,[getpathname(ds) filesep dirname{i} filesep 'stimtimes.txt'],1);
+		s.mti = s.mti(inds_nottotrim);
+	else,
+		% we already defined s
+	end;
+
+	do = getDisplayOrder(s.stimscript);
+
+	for i=1:length(do),
+		stim = get(s.stimscript,do(i));
+		% analyze all stims
+		p = getparameters(stim),
+		V = getgridvalues(stim);
+		[X,Y] = getgrid(stim); % get grid dimensions
+		gridsize = [X Y];
+		% grayscale
+		if isa(stim,'stochasticgridstim'),
+			colsgray = rescale(mean(p.values,2),[0 256],[-1 1]);
+		elseif isa(stim,'blinkingstim'),
+			colsgray = rescale(mean([p.BG;p.value],2),[0 256],[0 1]);
+		end;
+		cols = colsgray(V);
+		if min(size(cols))==1, cols = cols'; end;
+		stimoffsets = s.mti{i}.frameTimes;
+		spiketimes=get_data(mycell,[s.mti{i}.frameTimes(1)-10 s.mti{i}.frameTimes(end)+10],2);
+		numspikes = numspikes + length(spiketimes);
+		avgstim_=spike_triggered_average_stepfunc(spiketimes,kerneltimes,s.mti{i}.frameTimes,cols');
+		avgstim = cat(3,avgstim,avgstim_);
+	end;
+
+end
 
 figure;
 subplot(2,1,1);
@@ -84,9 +104,12 @@ if size(avgstim,2)==1,
 else,
 	pcolor(1:size(V,1),kerneltimes,mean(avgstim,3)); shading flat; 
 end;
+
 colormap(gray(256));
 subplot(2,1,2);
 [bs,bsimg] = rc_bootstrap(avgstim,1000);
-image(bsimg);set(gca,'ydir','normal');
+image(bsimg);
+
+set(gca,'ydir','normal');
 
 

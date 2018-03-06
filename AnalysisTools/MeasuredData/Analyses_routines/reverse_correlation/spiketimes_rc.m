@@ -47,28 +47,6 @@ usespike01 = 1;
 
 assign(varargin{:});
 
-if ischar(dirname),
-	s = getstimscripttimestruct(ds,dirname);
-	[s.stimscript,tempmti,inds_nottotrim] = stimscriptmtitrim(s.stimscript,s.mti,0);
-	s.mti = tpcorrectmti(s.mti,[getpathname(ds) filesep dirname filesep 'stimtimes.txt'],1); % not used
-	s.mti = s.mti(inds_nottotrim);
-	[stimids,allstimtimes,frameTimes] = read_stimtimes_txt([getpathname(ds) filesep dirname]);
-else,
-    s = dirname{1};
-    dirname = dirname{2};
-end;
-
-kerneltimes = mnt:step:mt;
-
-do = getDisplayOrder(s.stimscript);
-
-if isempty(stim_pres_to_include),
-	stim_pres_to_include = 1:length(do);
-end;
-
-good_pres = ismember(1:length(do), stim_pres_to_include) & ~ismember(1:length(do), stim_pres_to_exclude);
-good_pres_indexes = find(good_pres);
-
 rev_corr = [];
 rev_corr_raw = [];
 xc_stimsignal = [];
@@ -76,42 +54,91 @@ xc_stimstim = [];
 
 numspikes = 0;
 
-for i=1:good_pres_indexes,
-	stim = get(s.stimscript,do(i));
-	% analyze all stims
-	p = getparameters(stim);
-	V = getgridvalues(stim);
-	[X,Y] = getgrid(stim); % get grid dimensions
-	gridsize = [X Y];
-	% grayscale
-	if isa(stim,'stochasticgridstim'),
-		colsgray = rescale(mean(p.values,2),[0 256],[-1 1]);
-	elseif isa(stim,'blinkingstim'),
-		colsgray = rescale(mean([p.BG;p.value],2),[0 256],[0 1]);
+kerneltimes = mnt:step:mt;
+
+skipread = 0;
+
+if iscell(dirname),
+	% need to figure out if it is a list of directories
+	if numel(dirname)==2,
+		if isstruct(dirname{1}),
+			dirname = {dirname{2}};
+			s = dirname{1};
+			skipread = 1;
+		end
+	end
+	if ~skipread,
+		mycell = spiketimes; % this should be a cell in the case of a cell input dirname
+		spiketimes = {};
+		for i=1:numel(dirname),
+			spiketimes{i} = celldirspiketimes(ds, dirname{i}, mycell);
+		end
 	end;
-	cols = colsgray(V);
-	if min(size(cols))==1, cols = cols'; end;
-	stimoffsets = s.mti{i}.frameTimes;
-	numspikes = numspikes + length(spiketimes);
-	%avgstim_=spike_triggered_average_stepfunc(spiketimes,kerneltimes,s.mti{i}.frameTimes,cols');
-	xc_stimstim = autocorrelation(stim,step,length(kerneltimes),1);
-	xc_stimstim = xc_stimstim(:,1); % first column
-	%xc_stimstim = []; % force it to calculate it manually
-	if usespike01,
-		t_local = (frameTimes{i}(1)-5) : step : (frameTimes{i}(end)+1) ;
-		spike01 = histc(spiketimes,t_local);
-		[rev_corr_,rev_corr_raw_,xc_stimsignal_,xc_stimstim]=reverse_correlation_mv_stepfunc(spike01, t_local, kerneltimes,...
-			frameTimes{i}(:)',cols', 'dt',step,'dx',1,'xc_stimstim',xc_stimstim,'DoMedFilter',DoMedFilter,...
-			'MedFilterWidth',MedFilterWidth);
-	else,
-		[rev_corr_, rev_corr_raw_, xc_stimsignal_, xc_stimstim] = reverse_correlation_stepfunc(spiketimes, [], ...
-			kerneltimes, frameTimes{i}(:)',cols','dt',step,'dx',1,'xc_stimstim',xc_stimstim,'DoMedFilter',DoMedFilter,...
-			'MedFilterWidth',MedFilterWidth);
-	end;
-	rev_corr = cat(3,rev_corr,rev_corr_);
-	rev_corr_raw = cat(3,rev_corr_raw,rev_corr_raw_);
-	xc_stimsignal = cat(3,xc_stimsignal,xc_stimsignal_);
+else,
+	dirname = {dirname};
+	spiketimes = {spiketimes};
 end;
+
+for D=1:numel(dirname),
+
+	if ~skipread,
+		s = getstimscripttimestruct(ds,dirname{D});
+		[s.stimscript,tempmti,inds_nottotrim] = stimscriptmtitrim(s.stimscript,s.mti,0);
+		s.mti = tpcorrectmti(s.mti,[getpathname(ds) filesep dirname{D} filesep 'stimtimes.txt'],1); % not used
+		s.mti = s.mti(inds_nottotrim);
+		[stimids,allstimtimes,frameTimes] = read_stimtimes_txt([getpathname(ds) filesep dirname{D}]);
+	else,
+		% we already read s
+	end;
+
+
+	do = getDisplayOrder(s.stimscript);
+
+	if isempty(stim_pres_to_include),
+		stim_pres_to_include = 1:length(do);
+	end;
+
+	good_pres = ismember(1:length(do), stim_pres_to_include) & ~ismember(1:length(do), stim_pres_to_exclude);
+	good_pres_indexes = find(good_pres);
+
+	for i=1:good_pres_indexes,
+		stim = get(s.stimscript,do(i));
+		% analyze all stims
+		p = getparameters(stim);
+		V = getgridvalues(stim);
+		[X,Y] = getgrid(stim); % get grid dimensions
+		gridsize = [X Y];
+		% grayscale
+		if isa(stim,'stochasticgridstim'),
+			colsgray = rescale(mean(p.values,2),[0 256],[-1 1]);
+		elseif isa(stim,'blinkingstim'),
+			colsgray = rescale(mean([p.BG;p.value],2),[0 256],[0 1]);
+		end;
+		cols = colsgray(V);
+		if min(size(cols))==1, cols = cols'; end;
+		stimoffsets = s.mti{i}.frameTimes;
+		numspikes = numspikes + length(spiketimes{D});
+		%avgstim_=spike_triggered_average_stepfunc(spiketimes{D},kerneltimes,s.mti{i}.frameTimes,cols');
+		xc_stimstim = autocorrelation(stim,step,length(kerneltimes),1);
+		xc_stimstim = xc_stimstim(:,1); % first column
+		%xc_stimstim = []; % force it to calculate it manually
+		if usespike01,
+			t_local = (frameTimes{i}(1)-5) : step : (frameTimes{i}(end)+1) ;
+			spike01 = histc(spiketimes{D},t_local);
+			[rev_corr_,rev_corr_raw_,xc_stimsignal_,xc_stimstim]=reverse_correlation_mv_stepfunc(spike01, t_local, kerneltimes,...
+				frameTimes{i}(:)',cols', 'dt',step,'dx',1,'xc_stimstim',xc_stimstim,'DoMedFilter',DoMedFilter,...
+				'MedFilterWidth',MedFilterWidth);
+		else,
+			[rev_corr_, rev_corr_raw_, xc_stimsignal_, xc_stimstim] = reverse_correlation_stepfunc(spiketimes{D}, [], ...
+				kerneltimes, frameTimes{i}(:)',cols','dt',step,'dx',1,'xc_stimstim',xc_stimstim,'DoMedFilter',DoMedFilter,...
+				'MedFilterWidth',MedFilterWidth);
+		end;
+		rev_corr = cat(3,rev_corr,rev_corr_);
+		rev_corr_raw = cat(3,rev_corr_raw,rev_corr_raw_);
+		xc_stimsignal = cat(3,xc_stimsignal,xc_stimsignal_);
+	end;
+
+end
 
 avg_revcorr = mean(rev_corr);
 avg_revcorr_raw = mean(rev_corr_raw);
