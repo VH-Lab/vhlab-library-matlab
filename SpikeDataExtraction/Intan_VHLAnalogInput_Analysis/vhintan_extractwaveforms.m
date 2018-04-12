@@ -1,4 +1,4 @@
-function [wavetimes, t] = extractvhintanwaveforms(dirname, samples, refractory_period_samples, varargin)
+function [wavetimes, t] = vhintan_extractwaveforms(dirname, samples, refractory_period_samples, varargin)
 % VHINTAN_EXTRACTVHINTANWAVEFORMS - Extract spike waveforms from VH lab multichannel labview recordings
 %
 %     VHINTAN_EXTRACTVHINTANWAVEFORMS(DIRNAME, [S0 S1], REFRACTORY_PERIOD_SAMPLES, ...)

@@ -37,13 +37,15 @@ assign(varargin{:});
 dirs = dirs(order);
 status = status(order);
 
- % step 2 - autothreshold the first directory
+ % step 2 - autothreshold each directory %the first directory
 
-vhintan_autothreshold_dir([getpathname(ds) filesep dirs{1}],'sigma',sigma,'pretime',pretime,'usemedian',usemedian,...
-	'MEDIAN_FILTER_ACROSS_CHANNELS',MEDIAN_FILTER_ACROSS_CHANNELS);
+for i=1:numel(dirs),
+	vhintan_autothreshold_dir([getpathname(ds) filesep dirs{i}],'sigma',sigma,'pretime',pretime,'usemedian',usemedian,...
+		'MEDIAN_FILTER_ACROSS_CHANNELS',MEDIAN_FILTER_ACROSS_CHANNELS);
+end
 
  % step 3 - copy these to subsequent directories
 
-vhintan_copythresholds(ds,dirs{1});
+%vhintan_copythresholds(ds,dirs{1});
 
 
