@@ -55,69 +55,7 @@ assoc = assoc([]);
 
 tests = {}; testresps = {}; stimid = []; stims = {}; resps = {};
 
-for j=1:length(testnamelist),
-	s = findstr(upper(testnamelist{j}),' TEST');
-	tas = findassociate(newcell, testnamelist{j},'','');
-	thetestnamepart = testnamelist{j}(1:s-1);
-	if ~isempty(tas) & was_recorded(newcell,thetestnamepart),
-		if ~isempty(s),
-			resname = [testnamelist{j}(1:s) 'resp'];
-			res = findassociate(newcell, resname,'','');
-			testdirname = tas.data;
-		else,
-			res = tas;
-			testdirname = 'N/A';
-		end;
-	        if isempty(res),
-			cellname, s, keyboard;
-		elseif ~isempty(res)&isfield(res.data,'f0curve')&(f0orf1==0),
-			res.data.curve = res.data.f0curve{1};
-			X = res.data.f0vals{1};
-			res.data.ind = mat2cell(X,size(X,1),ones(1,size(X,2)));
-		elseif f0orf1==1&~isfield(res.data,'f1curve'),
-			error(['F1 analysis requested but no F1 data for cell ' cellname ' for test ' testnamelist{j} '.']);
-		elseif isfield(res.data,'f1curve')&(f0orf1==1),
-			res.data.curve = res.data.f1curve{1};
-			X = abs(res.data.f1vals{1});
-			res.data.ind = mat2cell(X,size(X,1),ones(1,size(X,2)));
-		elseif isfield(res.data,'f2curve')&(f0orf1==2),
-			res.data.curve = res.data.f2curve{1};
-			X = abs(res.data.f2vals{1});
-			res.data.ind = mat2cell(X,size(X,1),ones(1,size(X,2)));
-		elseif f0orf1==2&~isfield(res.data,'f2curve'),
-			error(['F2 analysis requested but no F2 data for cell ' cellname ' for test ' testnamelist{j} '.']);
-		end;
-		if isfield(res.data,'blank'),
-			if ~isempty(res.data.blank(1))&isfield(res.data.blank(1),'f0curve')&(f0orf1==0),
-				res.data.blankresp = res.data.blank(1).f0curve{1}(2:4,1);
-				X = res.data.blank(1).f0vals{1};
-				res.data.blankind = X;
-			elseif f0orf1==1&~isfield(res.data.blank(1),'f1curve'),
-				error(['F1 analysis requested but no F1 blank data for cell ' cellname ' for test ' testnamelist{j} '.']);
-			elseif isfield(res.data.blank(1),'f1curve')&(f0orf1==1),
-				res.data.blankresp = res.data.blank(1).f1curve{1}(2:4,1);
-				X = abs(res.data.blank(1).f1vals{1});
-				res.data.blankind = X;
-			elseif isfield(res.data.blank(1),'f2curve')&(f0orf1==2),
-				res.data.blankresp = res.data.blank(1).f2curve{1}(2:4,1);
-				X = abs(res.data.blank(1).f2vals{1});
-				res.data.blankind = X;
-			elseif f0orf1==2&~isfield(res.data.blank(1),'f2curve'),
-				error(['F2 analysis requested but no F2 data for cell ' cellname ' for test ' testnamelist{j} '.']);
-			end;
-		end;
-		tests = cat(2,tests,testdirname);
-		testresps = cat(2,testresps,res.data);
-	end;
-end;
-
- % eliminate any duplicate directories
-[tests,I] = unique(tests);
-if ~isempty(testresps), testresps = testresps(I); end;
- % eliminate any empty responses
-I = [];
-for j=1:length(testresps), if ~isempty(testresps{j}), I(end+1)=j; end; end;
-tests = tests(I); testresps = testresps(I);
+[testresps, tests, testparams] = testnamelist2respstruct(cell, testnamelist, f0orf1);
 
 if isempty(tests), return; end;
 
@@ -140,7 +78,6 @@ for j=1:length(tests),
 	stimid(end+1) = FitzColorStimID(get(s.stimscript,1),10);
 end;
 
-
 	%loop over all color id's, find maximum response, and analyze
 
 stimidlist = unique(stimid);	
@@ -154,6 +91,7 @@ for k = 1 : length(stimidlist),
 	end;
 	if bestRi>0,
 		resp = testresps{bestRi};
+		paramshere = testparams{bestRi};
         	% find nonblank elements
 	        stimlist = [];
 		for i=1:numStims(stims{bestRi}.stimscript),
@@ -167,7 +105,7 @@ for k = 1 : length(stimidlist),
 			for i=stimlist,
 				myinds(end+1) = i;
 				if ~isempty(paramevalstr),
-					p = getparameters(get(stims{bestRi}.stimscript,i)),
+					p = getparameters(get(stims{bestRi}.stimscript,i));
 					resp.curve(1,i) = eval(paramevalstr);
 				end;
 			end;
@@ -181,7 +119,11 @@ for k = 1 : length(stimidlist),
 		else, % just use the spontaneous values already present
 		end;
 
-		newassocs = eval([analysisfunc '(resp);']);
+		if ~isempty(paramshere),
+				newassocs = eval([analysisfunc '(resp, paramshere);']);
+		else,
+			newassocs = eval([analysisfunc '(resp);']);
+		end
 
 		K = find(allstimids==stimidlist(k));
 		if ~isempty(begStrs{K}), skips = ' '; else, skips = ''; end;
