@@ -103,7 +103,7 @@ function [assoc]=otanalysis_compute(respstruct)
 %  'OT Fit Direction index 2 peak blr' Directionality index w/ blank
 %                                            subtracted, rectified
 %
-%  A list of associate types that TPOTANALYSIS computes is returned if
+%  A list of associate types that OTANALYSIS_COMPUTE computes is returned if
 %  the function is called with no arguments.
 
 if nargin==0,
