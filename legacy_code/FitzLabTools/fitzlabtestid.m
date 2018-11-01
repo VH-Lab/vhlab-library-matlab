@@ -36,7 +36,7 @@ types = {'Best orientation test','Best SF test', 'Best TF test', 'Best contrast 
 	'orientation test','SF test','TF test','contrast test',...
 	'Best phase test','phase test','Best X pos test','Best Y pos test','Color exchange test',...
 	'DragoiAdaptOri test','DragoiAdaptPos test','Color exchange barrage test','Color exchange Dacey-like test',...
-	'Color exchange Dacey expanded test'};
+	'Color exchange Dacey expanded test','MixedDirSF test','MixedDirTF test'};
 params = {'angle','sFrequency','tFrequency','contrast',...
 		'angle','sFrequency','tFrequency','contrast','sPhaseShift','sPhaseShift'};
 
@@ -240,5 +240,29 @@ switch type,
 				end;
 			end;
 		end;
+    case 'MixedDirTF test',
+        testgood = 1;
+        if numStims(script)<4, testgood = 0; end;
+        if testgood,
+            testgood = 0;
+            do = getDisplayOrder(script);
+            WV = sswhatvaries(script);
+            if length(intersect(WV,{'nCycles'}))==1 & length(intersect(WV,{'tFrequency'}))==1 & length(intersect(WV,{'angle'}))==1,
+                testgood = 1;
+                is_type=1; mbu=1; ma=0; ra=1;lsu=0;lou=0;
+            end;
+        end
+    case 'MixedDirSF test',
+        testgood = 1;
+        if numStims(script)<4, testgood = 0; end;
+        if testgood,
+            testgood = 0;
+            do = getDisplayOrder(script);
+            WV = sswhatvaries(script);
+            if length(intersect(WV,{'sFrequency'}))==1 & length(intersect(WV,{'angle'}))==1,
+                testgood = 1;
+                is_type=1; mbu=1; ma=0; ra=1;lsu=0;lou=0;
+            end;
+        end
 end;
 

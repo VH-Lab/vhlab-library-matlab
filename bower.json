@@ -1,14 +1,14 @@
 {
-  "name": "vhlab_mltbx_matlibraries",
-  "homepage": "https://github.com/VH-Lab/vhlab_mltbx_matlibraries",
+  "name": "vhlab-library-matlab",
+  "homepage": "https://github.com/VH-Lab/vhlab-library-matlab",
   "authors": [
     "[Stephen D. Van Hooser] <[vanhoosr@brandeis.edu]>"
   ],
-  "description": "VH Lab Matlab libraries; functions that manage and analyze VH lab experiments that are less general than vhlab_mltbx_toolbox",
+  "description": "VH Lab Matlab libraries; functions that manage and analyze VH lab experiments that are less general than vhlab-toolbox-matlab",
   "main": "",
   "license": "MIT",
   "dependencies": {
-	  "vhlab_mltbx_toolbox": "git://github.com/VH-Lab/vhlab_mltbx_toolbox.git"
+	  "vhlab-toolbox-matlab": "git://github.com/VH-Lab/vhlab-toolbox-matlab.git"
   }
 }
 

@@ -68,6 +68,8 @@ function [im,scalebaraxes,scalebarimage]=pvcontinuousmap(dirname,channel,cells,c
 %
 %  VECTORGRAPHICS - 0/1  Use vector graphics?  Default 0 (no).
 %    If VECTORGRAPHICS is 1, then the result will be plotted.
+%
+%  SHIFTCELLPOSITION - [0 0] Amount to shift the cell position in [x y]
 
 
 
@@ -121,6 +123,8 @@ direction_line_color = [ 0 1 0 ];
 image_background_color = 0;
 
 vectorgraphics = 0;
+
+shiftcellposition = [ 0 0];
 
 assign(varargin{:});
 
@@ -189,7 +193,8 @@ for i=1:length(cells),
 		end;
 		values(end+1) = x;  % next line x has new meaning
 		[xyz]=tpgetcellposition(cells{i});
-		x = xyz(1); y=xyz(2);
+		x = xyz(1) + shiftcellposition(1);
+		y = xyz(2) + shiftcellposition(2);
 		if rotate==0,
 			pts = [pts ; x y];
 		elseif rotate==90,
