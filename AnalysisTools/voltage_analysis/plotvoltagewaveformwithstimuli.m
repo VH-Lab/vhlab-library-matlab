@@ -53,8 +53,6 @@ for i=1:numel(mti2),
 	stimoffset(end+1) = (mti2{i}.startStopTimes(3) - starttime - shift)/scale;
 end
 
-stimonset,
-
 sample_dt = analogtime(2) - analogtime(1);
 sample_f = 1/sample_dt;
 
