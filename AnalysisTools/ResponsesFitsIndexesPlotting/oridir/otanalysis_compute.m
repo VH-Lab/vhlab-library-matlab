@@ -146,15 +146,20 @@ angles = resp(1,:);
 otpref = [resp(1,if0)];
 
 if max(angles)<=180,
-	tuneangles = [angles angles+180]; tuneresps = [resp(2,:) resp(2,:)]; tuneerr = [resp(4,:) resp(4,:)];
+	tuneangles = [angles angles+180];
+	tuneresps = [resp(2,:) resp(2,:)];
+	tuneerr = [resp(4,:) resp(4,:)];
 else,
-	tuneangles = angles; tuneresps = resp(2,:); tuneerr = resp(4,:);
+	tuneangles = angles;
+	tuneresps = resp(2,:);
+	tuneerr = resp(4,:);
 	directionindex = compute_directionindex(angles,resp(2,:));
 end;
 
 if isfield(respstruct,'blankresp'),
 	blankresp = respstruct.blankresp(1);
-else, blankresp = 0;
+else,
+	blankresp = 0;
 end;
 
 circularvariance = compute_circularvariance(tuneangles,tuneresps-blankresp);
@@ -208,6 +213,7 @@ da = diff(sort(angles)); da = da(1);
 %[rcurve,n_otpref,n_tuningwidth]=fit_otcurve([tuneangles; tuneresps],otpref,90,maxresp,0);
 % tuning_width is not calculated with spontaneous rate subtracted
 % do five fits of each type, varying initial width seed
+
 widthseeds = [da/2 da 40 60 90];
 errors = [Inf Inf Inf];
 for i=1:length(widthseeds),

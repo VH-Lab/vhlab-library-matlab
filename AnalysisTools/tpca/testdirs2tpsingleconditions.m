@@ -15,7 +15,8 @@ function testdirs2tpsingleconditions(prefix, expernames, testdirs, varargin)
 %  -----------------------------------------------------------------------
 %  channel (2)                      | The channel over which the single
 %                                   |   condition images are computed
-%
+%  T0_T1 ([])                       | The input argument showing the
+%                                   |    interval of time to use for computation
 %
 %  See also: TESTDIRINFO
 
@@ -25,6 +26,7 @@ if nargin<3,
 end;
 
 channel = 2;
+t0_t1 = [];
 
 assign(varargin{:});
 
@@ -54,7 +56,7 @@ for i=1:length(expernames),
 		for j=1:length(matches),
 			disp(['Computing single condition: ' getpathname(ds) filesep tdi(matches(j)).testdir '...']);
 			clear result indimages;
-			[result,indimages]=tpsinglecondition([getpathname(ds) filesep tdi(matches(j)).testdir],channel,[],[],[],0,'');
+			[result,indimages]=tpsinglecondition([getpathname(ds) filesep tdi(matches(j)).testdir],channel,[],t0_t1,[],0,'');
 			fname = [getpathname(ds) filesep tdi(matches(j)).testdir filesep 'singleconditions_' int2str(channel) '.mat'];
 			save(fname,'result','indimages','-mat');
 		end;  % for j
