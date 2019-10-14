@@ -11,7 +11,5 @@ function datestr = cellname2date(cellname)
 %
 %   See also: CELLNAME2NAMEREF, NAMEREF2CELLNAME
 
-m = find(cellname=='_');
-datestr = [cellname(m(4)+1:m(5)-1) '-' cellname(m(5)+1:m(6)-1) '-' cellname(m(6)+1:end)];
+[dummy,dummy,datestr] = cellname2nameref(cellname);
 
-		

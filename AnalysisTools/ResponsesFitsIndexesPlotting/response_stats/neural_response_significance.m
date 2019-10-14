@@ -26,13 +26,13 @@ function [sigp,sigpb] = neural_response_significance(resp)
 groupmem = [];
 vals = [];
 for i=1:length(resp.ind),
-	vals = cat(1,vals,resp.ind{i});
-	groupmem = cat(1,groupmem,i*ones(size(resp.ind{i})));
+	vals = cat(1,vals,colvec(resp.ind{i}));
+	groupmem = cat(1,groupmem,i*ones(size(colvec(resp.ind{i}))));
 end;
 sigp = anova1(vals,groupmem,'off');
-if isfield(resp,'blankresp'),
-	vals = cat(1,vals,resp.blankind);
-	groupmem = cat(1,groupmem,(length(resp.ind)+1)*ones(size(resp.blankind)));
+if isfield(resp,'blankind'),
+	vals = cat(1,vals,colvec(resp.blankind));
+	groupmem = cat(1,groupmem,(length(resp.ind)+1)*ones(size(colvec(resp.blankind))));
 	sigpb = anova1(vals,groupmem,'off');
 else, sigpb = sigp;
 end;
