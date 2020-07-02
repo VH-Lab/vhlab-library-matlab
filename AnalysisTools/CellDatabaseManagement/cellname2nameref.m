@@ -14,7 +14,7 @@ function [nameref,index,datestr] = cellname2nameref(cellname)
 %
 %   See also: NAMEREF2CELLNAME, CELLNAME2DATE
 
-m = find(cellname=='_')
+m = find(cellname=='_');
 nameref = struct('name',cellname(m(1)+1:m(end-5)-1), ...
 	'ref',round(str2num(cellname(m(end-4)+1:m(end-3)-1))));
 
