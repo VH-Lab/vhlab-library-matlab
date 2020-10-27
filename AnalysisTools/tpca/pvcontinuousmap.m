@@ -170,7 +170,8 @@ index = [];
 pts = [];  inclpts = []; values = [];
 
 for i=1:length(cells),
-	pva = []; incl = 1;
+	pva = [];
+	incl = 1;
 	inda = findassociate(cells{i},indexassoc,'','');
 	if ~isempty(pvalueassoc),
 		pva = findassociate(cells{i},pvalueassoc,'','');
@@ -187,7 +188,10 @@ for i=1:length(cells),
 		incl = 0;
 	end;
 	if incl, 
-		x = inda.data;
+		x = 0; % start out with 0 as a value
+		if ~isempty(indexassoc) & ~isempty(inda),
+			x = inda.data;
+		end;
 		if ~isempty(funcstring),
 			x=eval(funcstring);
 		end;
@@ -201,7 +205,9 @@ for i=1:length(cells),
 			pts = [pts; y 1+sz(1)-x];
 		end;
 		inclpts(end+1) = i;
-		if any(cols(i,:)<0),
+		if size(cols,1)<i,
+			mycol = cols(size(cols,1),:);
+		elseif any(cols(i,:)<0),
 			mycol = ctab(findclosest(steps,values(end)),:);
 		else,
 			mycol = cols(i,:);
@@ -566,7 +572,8 @@ for i=1:length(cells),
 			im2(inds) = (1-transparency)*mycol(2)+(transparency)*im2(inds);
 			im3(inds) = (1-transparency)*mycol(3)+(transparency)*im3(inds);
 
-		else, error(['Unknown symbol ' int2str(symb(i)) '.']);
+		else,
+			error(['Unknown symbol ' int2str(symb(i)) '.']);
 		end;
 
 		if ~any(symb(i)==[9 10 15 16]),
@@ -585,7 +592,7 @@ end;
 
 if plotit,
 	figure;
-	ax = axes('position',[0.100    0.15    0.70    0.70]);
+	ax = axes('position', [0.100    0.15    0.70    0.70]);
 	imageh = image(im);
 
 	% scale bar
