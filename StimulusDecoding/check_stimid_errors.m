@@ -9,7 +9,7 @@ N = 0;
 
 for i=1:numel(stimids),
 	if i~=numel(stimids),
-		if stimids(i+1)==255, % glitch
+		if stimids(i+1)==255 | stimids(i+1)==0, % glitch
 			stimbits = dec2bin(stimids(i),8);
 			for j=1:numel(stimbits),
 				bits(j) = bits(j) + str2num(stimbits(j));
