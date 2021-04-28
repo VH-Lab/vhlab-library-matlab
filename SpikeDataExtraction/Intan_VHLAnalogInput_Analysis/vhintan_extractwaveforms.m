@@ -219,7 +219,7 @@ for i=1:length(filtermap),
 					myp.samplingrate = header.frequency_parameters.amplifier_sample_rate;
 					myfid = newvhlspikewaveformfile(changrouping_wavefname{k},myp);
 					changrouping_created(k) = 1;
-					fclose(myfid);
+					%fclose(myfid); newvhlspikewaveformfile should close it
 				end;
 				addvhlspikewaveformfile(changrouping_wavefname{k},my_waveforms);
 			end; % isempty intersection
