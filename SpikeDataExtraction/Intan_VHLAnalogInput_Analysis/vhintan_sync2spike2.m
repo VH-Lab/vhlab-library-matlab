@@ -29,16 +29,18 @@ function [shift,scale] = vhintan_sync2spike2(dirname, varargin)
 %
 %  See also: VHINTAN_INTAN2SPIKE2TIME
 
-READSIZE = 10;  % read in N second steps
+READSIZE = 100;  % read in N second steps
 OVERLAP = 0.05;  % overlap each read by 0.1 seconds
 VERBOSE = 0;
 VERBOSE_GRAPHICAL = 1;
 FORCE_RERUN = 0;
+PLOTIT = 0;
 
 assign(varargin{:});
 
 filename = 'vhintan_intan2spike2time.txt';
 syncfilename = 'vhintan_syncchannel.txt';
+ignorefilename = 'vhintan_intanignoretriggers.txt';
 
 if exist([dirname filesep filename])==2 & ~FORCE_RERUN,
 	g = load([dirname filesep filename],'-ascii');
@@ -78,6 +80,12 @@ if exist([dirname filesep syncfilename])==2,
 	synchchannel = load([dirname filesep syncfilename],'-ascii');
 else,
 	synchchannel = 1;
+end;
+
+if vlt.file.isfile([dirname filesep ignorefilename]),
+	ignoretriggers = load([dirname filesep ignorefilename],'-ascii');
+else,
+	ignoretriggers = [];
 end;
 
 
@@ -134,6 +142,12 @@ end;
 
 intan_stimtimes = unique(intan_stimtimes);
 
+ignoretriggers,
+intan_dontignore = setdiff(1:numel(intan_stimtimes),ignoretriggers);
+
+intan_stimtimes = intan_stimtimes(intan_dontignore);
+
+
 if length(intan_stimtimes)==1,
 	if length(spike2_stimtimes)~=1,
     		error(['Unable to find the shift from spike2_stimtimes and intan_stimtimes. The usual cause is that Spike2 has acquired too many triggers(' int2str(length(spike2_stimtimes)) '), or Intan has not acquired the proper number of triggers (' int2str(length(intan_stimtimes)) '). Please edit the file stimtimes.txt in the directory ' dirname '.']);
@@ -150,9 +164,20 @@ else, % we have at least 2 points
 	    error(['Unable to fit a line to spike2_stimtimes and intan_stimtimes. The usual cause is that Spike2 has acquired too many triggers(' int2str(length(spike2_stimtimes)) '), or Intan has not acquired the proper number of triggers (' int2str(length(intan_stimtimes)) '). Please edit the file stimtimes.txt in the directory ' dirname '.']);
 	end;
 	warning(warnstate);
-	
+
 	shift = P(2);
 	scale = P(1);
+
+	if PLOTIT,
+		figure;
+		plot(intan_stimtimes(:),spike2_stimtimes(:),'o');
+		hold on;
+		plot(intan_stimtimes(:),intan_stimtimes(:)*scale+shift,'-','linewidth',1);
+		xlabel('Intan times');
+		ylabel('Spike2 times');
+	end;
+
+
 end;
 
 dlmwrite([dirname filesep filename],[shift scale],'delimiter',' ','precision',15);
