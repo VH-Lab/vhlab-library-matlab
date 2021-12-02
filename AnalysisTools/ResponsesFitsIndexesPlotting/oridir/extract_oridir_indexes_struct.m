@@ -34,8 +34,8 @@ ColorType = 'Ach';
 
 assign(varargin{:});
 
-[f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff_var, pref, null, orth, fit, sig_vis,dircv] = extract_oridir_indexes(cell,...
+[f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff_var, pref, null, orth, fit, sig_vis,dircv,otvecpref,dirvecpref] = extract_oridir_indexes(cell,...
 	'TestType',TestType,'ColorType',ColorType);
 
 otindexstruct = var2struct('f1f0','dirpref','oiind','tunewidth','cv','di','sig_ori','blank_rate', ...
-		'max_rate', 'coeff_var', 'pref', 'null', 'orth', 'fit','sig_vis','dircv');
+		'max_rate', 'coeff_var', 'pref', 'null', 'orth', 'fit','sig_vis','dircv','otvecpref','dirvecpref');
