@@ -1,8 +1,8 @@
-function [f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff_var, pref, null, orth, fit, sig_vis,dircv]=extract_oridir_indexes(cell,varargin)
+function [f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff_var, pref, null, orth, fit, sig_vis,dircv,otprefvec,dirprefvec]=extract_oridir_indexes(cell,varargin)
 % Extract common orientation/direction index values from a cell
 %
 %  [F1F0,DIRPREF,OI,TUNEWIDTH,CV,DI,SIG_ORI,BLANK_RATE,MAX_RATE,
-%     COEFFVAR,PREF,NULL,ORTH,FIT,SIG_VIS,DIRCV] = EXTRACT_ORIDIR_INDEXES(CELL)
+%     COEFFVAR,PREF,NULL,ORTH,FIT,SIG_VIS,DIRCV,OTPREFVEC,DIRPREFVEC] = EXTRACT_ORIDIR_INDEXES(CELL)
 %
 %  Returns several common index values from a CELL that is an
 %  object of type MEASUREDDATA.
@@ -26,6 +26,8 @@ function [f1f0,dirpref,oiind,tunewidth,cv,di,sig_ori,blank_rate, max_rate, coeff
 %    SIG_VIS - The P value that determines if there is a significant visual
 %           response
 %    DIRCV - circular variance in direction space (Mazurek et al., 2014)
+%.   OTPREFVEC - OT preference determined by vector repsonses 
+%.   DIRPREFVEC - direction preference determined by vector responses
 %
 %  This function's beheavior may be modified by name/value pairs:
 %  Parameters (default)     | Description
@@ -69,11 +71,18 @@ A23 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' visual response p'],
 A24 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' Dir Circular variance'],'','');
 A25 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' Dir Circular variance'],'','');
 
+A26 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' OT Pref Vec'],'','');
+A27 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' OT Pref Vec'],'','');
+
+A28 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' OT Dir Pref Vec'],'','');
+A29 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' OT Dir Pref Vec'],'','');
 
 f1f0 = []; dirpref = []; oiind = []; tunewidth = []; cv = []; di =[];
 sig_ori = []; blank_rate = []; pref = []; null = []; orth = [];
 fit = []; coeff_var = []; 
 max_rate = []; sig_vis = [];
+otprefvec = [];
+dirprefvec = [];
 dircv = [];
 
 if ~isempty(A1)&~isempty(A2)&~isempty(A3)&~isempty(A4),
@@ -113,6 +122,8 @@ if ~isempty(A1)&~isempty(A2)&~isempty(A3)&~isempty(A4),
 			fit = A20.data - blank_rate;
 			dirpref = A2.data(1,ind);
 			sig_vis = A22.data(1);
+			otprefvec = A26.data(1);
+			dirprefvec = A28.data(1);			
 		else,
 			ind = indf1;
 			oiind=fit2fitoi(A3.data, 0);
@@ -138,7 +149,9 @@ if ~isempty(A1)&~isempty(A2)&~isempty(A3)&~isempty(A4),
 			orth = fit2orth(A21.data);
 			fit = A21.data - blank_rate;
 			dirpref = A3.data(1,ind);
-			sig_vis = A23.data(1);            
+			sig_vis = A23.data(1);
+			otprefvec = A27.data(1);
+			dirprefvec = A29.data(1);			
 		end;
 		f1f0 = A3.data(2,ind)./(A2.data(2,ind)+A3.data(2,ind));
 	end;
