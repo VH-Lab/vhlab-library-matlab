@@ -72,6 +72,8 @@ f1f0 = NaN; dirpref = NaN; oiind = NaN; tunewidth = NaN; cv = NaN;
 dcv = NaN; di =NaN; sig_ori = NaN; blank_rate = NaN; max_rate = NaN; pref = NaN;
 null = NaN; orth = NaN; coef_var = NaN; dr = NaN; sig_vis = NaN;
 time = NaN; di_signtrainingangle = NaN;
+otprefvec = NaN;
+dirprefvec = NaN;
 OTresponsestruct = [];
 OTresponsecurve = [];
 OTfit = [];
@@ -104,7 +106,7 @@ end;
 assoc_names = {'OT visual response p','OT Carandini Fit','OT Response struct',...
 		'OT Tuning width','OT Fit Orientation index blr',...
 		'OT Fit Direction index blr','OT vec varies p','OT Blank Response','OT Max Response',...
-		'OT Fit Pref','OT Circular variance','OT Response curve'};
+		'OT Fit Pref','OT Circular variance','OT Response curve','OT Pref Vec','OT Dir Pref Vec'};
 
 anyempty = 0;
 
@@ -136,6 +138,8 @@ if ~anyempty,
 	orth = fit2orth(a{2}.data(2,:))-blank_rate;
 	[max_rate,coef_var] = neural_maxrate_variability(a{3}.data);
 	max_rate = max_rate - blank_rate;
+    otprefvec = a{13}.data(1);
+    dirprefvec = a{14}.data(1);
 end;
 
 
@@ -169,7 +173,7 @@ end;
 allout = workspace2struct;
 
 fn = {'f1f0', 'dirpref', 'oiind', 'tunewidth', 'cv', 'dcv','di', 'sig_ori', 'sig_vis','blank_rate', 'max_rate',  ...
-		'pref', 'null', 'orth','coef_var','time','dr','trainingtype','trainingangle','trainingtf','trainingstim','OTresponsestruct','OTresponsecurve','OTfit'};
+		'pref', 'null', 'orth','coef_var','time','dr','trainingtype','trainingangle','trainingtf','trainingstim','OTresponsestruct','OTresponsecurve','OTfit','otprefvec','dirprefvec'};
 
 output = struct;
 
