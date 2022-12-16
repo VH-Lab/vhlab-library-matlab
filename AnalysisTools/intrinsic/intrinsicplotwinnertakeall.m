@@ -1,4 +1,4 @@
-function intrinsicplotwinnertakeall(dirname)
+function intrinsicplotwinnertakeall(dirname,images)
 
 [pathstr,name] = fileparts(dirname);
 
@@ -9,4 +9,4 @@ ctab = [jet(size(images,3))];
 
 figure;
 colormap(ctab);
-image(wta);
+image(wta.wta);

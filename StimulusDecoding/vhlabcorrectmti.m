@@ -9,7 +9,7 @@ function [mti2,starttime] = vhlabcorrectmti(mti, filename, globaltime)
 % STIMTIMEFILE.
 %
 % GLOBALTIME is an optional argument.  If it is 1 then time is returned
-% relative to the stimulus computer's clock.
+% relative to the stimulus computer's clock. By default, globealtime is 0.
 %
 % This function will save its work to a file called 'tpcorrectmti_fitzpatrick.mat'
 % and just read from this file if the modification date of 'filename' hasn't changed
@@ -50,7 +50,7 @@ sp2_stimids = [];
 i = 0;
 if length(mti)>1, % if more than one stim, then use stim start times to calc
 	while ~feof(fid),
-	        i=i+1;
+	    i=i+1;
 		stimline = fgets(fid);
 		if ~isempty(stimline)&~eqlen(-1,stimline),
 			stimdata = sscanf(stimline,'%f');
@@ -61,18 +61,18 @@ if length(mti)>1, % if more than one stim, then use stim start times to calc
 				catch,
 					error(['error in  ' filename '.']);
 				end;
-		                try,
-					mac_times(end+1) = mti{i}.startStopTimes(2);
+		        try,
+					mac_times(end+1) = mti{i}.startStopTimes(2); % mac_times really means stimulus computer time
 				catch,
 					error(['Error: there are extra stim triggers present in the stimtimes.txt (at least ' int2str(i) ') file as compared to what is expected from the content of stims.mat file (' int2str(length(mti)) ').']);
-					%length(sp2_stimids), i,
-					%keyboard;
 				end;
 				mac_stimid(end+1) = mti{i}.stimid;
 				%disp(['Mac stim ' int2str(mac_stimid(end)) ', spike2 stim: ' int2str(stimdata(1)) '.']);
-				%if mac_stimid(end)~=stimdata(1), error(['Stim order from stim computer does not match that recorded in Spike2 in filename ' filename]); end;
+				if mod(mac_stimid(end),256)~=stimdata(1),
+                    error(['Stim order in line ' int2str(i) ' from stim computer does not match that recorded in Spike2 in filename ' filename]);
+                end;
 			end;
-        	end;
+        end;
 	end;
 else, % if less than one stim, then use frametimes to calc match
 	stimline = fgets(fid);

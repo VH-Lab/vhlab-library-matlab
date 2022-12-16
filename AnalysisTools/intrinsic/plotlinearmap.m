@@ -1,6 +1,7 @@
 function [or] = plotlinearmap(dirname,maptitle,mapparameter,plotpolar,plotsingleconditions)
 
 %STILL NEEDS TESTING
+or = [];
 
 sv = load([fixpath(dirname) 'stimvalues.mat']);
 sv = sv.stimvalues;
@@ -16,6 +17,7 @@ for i=1:length(sv),
 	if ~isnan(sv(i)), nonblankinds(end+1) = i; end;
 end;
 
+
 myvals = rescale(sv(nonblankinds),[min(sv(nonblankinds)) max(sv(nonblankinds))],[0 135]);
 
 wta = intrinsicwinnertakeall(-images(:,:,nonblankinds),0);
@@ -23,7 +25,8 @@ wta = intrinsicwinnertakeall(-images(:,:,nonblankinds),0);
 save([fixpath(dirname) 'wta_map_data.mat'],'wta');
 
 if plotpolar,
-	[impolar,immag,or_angs,or_mag] = intrinsicplotwinnertakeall(dirname);
+%	[impolar,immag,or_angs,or_mag] = intrinsicplotwinnertakeall(dirname);
+    intrinsicplotwinnertakeall(dirname,images);
 end;
 
 if plotsingleconditions,
