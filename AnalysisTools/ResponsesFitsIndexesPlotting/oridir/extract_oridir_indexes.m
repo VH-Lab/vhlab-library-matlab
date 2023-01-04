@@ -71,11 +71,11 @@ A23 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' visual response p'],
 A24 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' Dir Circular variance'],'','');
 A25 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' Dir Circular variance'],'','');
 
-A26 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' OT Pref Vec'],'','');
-A27 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' OT Pref Vec'],'','');
+A26 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' Pref Vec'],'','');
+A27 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' Pref Vec'],'','');
 
-A28 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' OT Dir Pref Vec'],'','');
-A29 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' OT Dir Pref Vec'],'','');
+A28 = findassociate(cell,['SP F0 ' ColorType ' ' TestType ' Dir Pref Vec'],'','');
+A29 = findassociate(cell,['SP F1 ' ColorType ' ' TestType ' Dir Pref Vec'],'','');
 
 f1f0 = []; dirpref = []; oiind = []; tunewidth = []; cv = []; di =[];
 sig_ori = []; blank_rate = []; pref = []; null = []; orth = [];
