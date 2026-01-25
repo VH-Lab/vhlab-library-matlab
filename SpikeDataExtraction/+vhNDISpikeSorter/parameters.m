@@ -1,6 +1,6 @@
 classdef parameters
     properties
-        probe
+        probe {mustBeA(probe, 'ndi.probe')} = ndi.probe.empty()
 
         parameters = struct('settingsFile', "", ...
             'filter', struct('cheby1Order', 4, ...
@@ -22,7 +22,7 @@ classdef parameters
     methods
         function obj = parameters(args)
             arguments
-                args.probe = []
+                args.probe {mustBeA(args.probe, 'ndi.probe')} = ndi.probe.empty()
                 args.settingsFile (1,1) string = ""
                 args.filter struct = struct('cheby1Order', 4, ...
                         'cheby1Rolloff', 0.8, ...
@@ -39,9 +39,7 @@ classdef parameters
                          'progressBar', true)
             end
 
-            if ~isempty(args.probe)
-                 obj.probe = args.probe;
-            end
+            obj.probe = args.probe;
 
             % Update substructures merging with defaults
             obj.parameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.filter, args.filter);
