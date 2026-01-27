@@ -22,7 +22,7 @@ classdef parameters
     methods
         function obj = parameters(args)
             arguments
-                args.probe {mustBeA(args.probe, 'ndi.probe')} = ndi.probe.empty()
+                args.probe {mustBeA(args.probe, 'ndi.probe'), mustBeNonempty}
                 args.settingsFile (1,1) string = ""
                 args.filter struct = struct('cheby1Order', 4, ...
                         'cheby1Rolloff', 0.8, ...
