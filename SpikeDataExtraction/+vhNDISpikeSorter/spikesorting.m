@@ -142,38 +142,36 @@ switch command,
 	case 'ClusterBt',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		for i=1:length(v),
-            % Convert probes to ds/name/ref if needed or update clusternameref to accept probes
-
             p = ud.probes{v(i)};
-            % Assuming probe.name and probe.reference exist or equivalent
-
-            % Note: clusternameref expects a dirstruct as first arg.
-            ds = dirstruct(ud.ndiSession.path);
-            vhNDISpikeSorter.clusternameref(ds, p.name, p.reference);
+            % Note: clusternameref now accepts (ndiSession, probe)
+            vhNDISpikeSorter.clusternameref(ud.ndiSession, p);
 		end;
 	case 'NameRefList',
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
 	case 'UpdateNameRefList',
-        ud.probes = ud.ndiSession.getprobes();
+        if ~isempty(ud.ndiSession)
+            ud.probes = ud.ndiSession.getprobes('type', 'n-trode');
 
-		p_string = {};
-		for i=1:numel(ud.probes),
-			p_string{i} = ud.probes{i}.elementstring();
-		end;
-		set(findobj(fig,'tag','NameRefList'),'string',p_string,'value',[]);
+            % Get status for labeling
+            status = vhNDISpikeSorter.getprobeepochstatus(ud.ndiSession);
+
+            % Generate labels
+            p_string = vhNDISpikeSorter.probestatus2labels(ud.probes, status);
+
+            set(findobj(fig,'tag','NameRefList'),'string',p_string,'value',[]);
+        else
+            set(findobj(fig,'tag','NameRefList'),'string',{' '},'value',[]);
+        end
 		set(fig,'userdata',ud);
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
 	case 'ThresholdsBt',
 		prefs = struct2namevaluepair(ud.spikesortingprefs);
-        % setthresholds_gui still expects ds.
-        ds = dirstruct(ud.ndiSession.path);
-		vhNDISpikeSorter.setthresholds_gui('ds',ds,prefs{:});
+        % setthresholds_gui still expects ds? No, updated to ndiSession
+		vhNDISpikeSorter.setthresholds_gui('ndiSession',ud.ndiSession, 'params', ud.params);
 	case 'AutoThresholdsBt',
-        % Call autothreshold_all with ndiSession and params
         vhNDISpikeSorter.autothreshold_all(ud.ndiSession, ud.params);
 		msgbox('Auto thresholding completed successfully.');
 	case 'ExtractSelectBt',
-        % Updated to use correct arguments for extractselected
 		vhNDISpikeSorter.extractselected(ud.ndiSession, ud.params);
 	case 'EnableDisable',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
@@ -183,24 +181,12 @@ switch command,
 			set(findobj(fig,'tag','ClusterBt'),'enable','on');
 		end;
 	case 'PreferencesBt',
-        % The prompt asks to allow user to edit values and store back to json.
-        % We can reuse the inputdlg mechanism but populate it from ud.params
-
-        % We need to flatten the params structure to show it in inputdlg or create a custom GUI.
-        % The existing mechanism used ud.spikesortingprefs struct.
-        % ud.params has nested structs.
-        % I will create a simplified view or edit specific sections.
-        % For now, I'll focus on 'autothreshold' settings as they are used in AutoThresholdsBt.
-
-        % Let's create a list of editable parameters from ud.params
-        % We can iterate over fields in ud.params.spikeSortingParameters and their subfields.
-
         p_struct = ud.params.spikeSortingParameters;
         fields = {'filter', 'autothreshold', 'events', 'process'};
 
         prompt = {};
         definput = {};
-        map = {}; % Store mapping to struct fields
+        map = {};
 
         for k=1:length(fields)
             f = fields{k};
@@ -231,7 +217,6 @@ switch command,
                     val = eval(answer{i});
                     ud.params.spikeSortingParameters.(f).(sf) = val;
 				end
-                % Save back to JSON
                 ud.params.saveToJson();
 			end
 			set(fig,'userdata',ud);
