@@ -178,7 +178,71 @@ switch command
         vhNDISpikeSorter.setthresholds_gui('command','UpdateChannelMenu','fig',fig);
 
 	case 'CopyThresholdsBt'
-		uiwait(msgbox('Copy thresholds not yet implemented for NDI epochs','Copy thresholds result'));
+        % Get current probe
+        probe_idx = get(findobj(fig,'tag','ProbePopup'),'value');
+        if isempty(ud.probes) || probe_idx > numel(ud.probes)
+            msgbox('No probe selected.');
+            return;
+        end
+        probe = ud.probes{probe_idx};
+
+        % Get all epochs and sort
+        et = probe.epochtable();
+        epochIDs = sort({et.epoch_id});
+
+        if isempty(epochIDs)
+            msgbox('No epochs found for this probe.');
+            return;
+        end
+
+        % Path for threshold files
+        settingsDir = vhNDISpikeSorter.parameters.spikeSortingPath(ud.ndiSession);
+        pName = probe.elementstring();
+        pName = char(pName); pName(isspace(pName)) = '_'; pName = replace(pName, '|', '_');
+
+        last_valid_epoch = '';
+        copied_count = 0;
+
+        for i = 1:length(epochIDs)
+            currEpoch = epochIDs{i};
+
+            % Check if threshold files exist for this epoch (any channel)
+            % Pattern: pName_epochID_ch*.txt
+            filePattern = fullfile(settingsDir, [pName '_' currEpoch '_ch*.txt']);
+            existingFiles = dir(filePattern);
+
+            if ~isempty(existingFiles)
+                % This epoch has thresholds, update last valid
+                last_valid_epoch = currEpoch;
+            elseif ~isempty(last_valid_epoch)
+                % No thresholds here, copy from last valid
+
+                % List source files
+                srcPattern = fullfile(settingsDir, [pName '_' last_valid_epoch '_ch*.txt']);
+                srcFiles = dir(srcPattern);
+
+                for k = 1:length(srcFiles)
+                    srcFile = srcFiles(k).name;
+                    % Construct dest filename by replacing epoch ID
+                    % Be careful with replace if epoch IDs are substrings of each other.
+                    % Better to parse channel number and reconstruct.
+
+                    % Expected format: pName_epochID_chN.txt
+                    % We know pName and last_valid_epoch.
+                    % Suffix starts after pName_last_valid_epoch
+                    prefix = [pName '_' last_valid_epoch];
+                    if startsWith(srcFile, prefix)
+                        suffix = srcFile(length(prefix)+1:end); % _chN.txt
+                        destFile = [pName '_' currEpoch suffix];
+
+                        copyfile(fullfile(settingsDir, srcFile), fullfile(settingsDir, destFile));
+                    end
+                end
+                copied_count = copied_count + 1;
+            end
+        end
+
+		uiwait(msgbox(['Copied thresholds to ' int2str(copied_count) ' epochs.'],'Copy thresholds result'));
 
 	case 'UpdateChannelMenu'
         vhNDISpikeSorter.setthresholds_gui('command','Load','fig',fig);
@@ -344,9 +408,31 @@ switch command
         settingsDir = vhNDISpikeSorter.parameters.spikeSortingPath(ud.ndiSession);
         fullPath = fullfile(settingsDir, filename);
 
-        % Overwrite or create file for this channel
+        if exist(fullPath, 'file')
+            existing_thresholds = loadStructArray(fullPath);
+        else
+            existing_thresholds = struct('channel',{},'threshold',{});
+        end
+
+		if isempty(existing_thresholds)
+			existing_thresholds = newthreshold;
+		else
+			z = find([existing_thresholds.channel]==channel_value);
+			if isempty(z)
+				existing_thresholds(end+1) = newthreshold;
+			elseif length(z)==1
+				existing_thresholds(z) = newthreshold;
+			else
+                % Handle duplicates or error
+				existing_thresholds(z(1)) = newthreshold;
+			end
+			[sorted_values,sorted_indexes] = sort([existing_thresholds.channel]);
+			existing_thresholds = existing_thresholds(sorted_indexes);
+		end
+
+		% Save to disk
         if ~exist(settingsDir, 'dir'), mkdir(settingsDir); end
-		saveStructArray(fullPath, newthreshold);
+		saveStructArray(fullPath, existing_thresholds);
 
 		% now re-draw only the channel that was modified
 		ud.threshold_update_list = axnumber;
