@@ -1,20 +1,31 @@
 classdef parameters
     properties
-        spikeSortingParameters = struct('settingsFile', "", ...
-            'filter', struct('cheby1Order', 4, ...
-                        'cheby1Rolloff', 0.8, ...
-                        'cheby1Cutoff', 300, ...
-                        'medianFilterAcrossChannels', false), ...
-            'autothreshold', struct('sigma', 4, ...
-                               'readTime', 100, ...
-                               'useMedian', false), ...
-            'events', struct('samples', [-10 25], ...
-                        'refractoryPeriodSamples', 15, ...
-                        'centerRange', 10), ...
-            'process', struct('chunkTime', 20, ...
-                         'overlap', 0.05, ...
-                         'progressBar', true) ...
-             )
+        settingsFile (1,1) string = ""
+
+        % Filter parameters
+        filter_cheby1Order (1,1) double {mustBeNonnegative, mustBeInteger} = 4
+        filter_cheby1Rolloff (1,1) double {mustBeGreaterThan(filter_cheby1Rolloff, 0), mustBeLessThan(filter_cheby1Rolloff, 1)} = 0.8
+        filter_cheby1Cutoff (1,1) double {mustBePositive} = 300
+        filter_medianFilterAcrossChannels (1,1) logical = false
+
+        % Autothreshold parameters
+        autothreshold_sigma (1,1) double {mustBePositive} = 4
+        autothreshold_readTime (1,1) double {mustBePositive} = 100
+        autothreshold_useMedian (1,1) logical = false
+
+        % Events parameters
+        events_samples (1,2) double {mustBeInteger} = [-10 25]
+        events_refractoryPeriodSamples (1,1) double {mustBeNonnegative, mustBeInteger} = 15
+        events_centerRange (1,1) double {mustBeNonnegative, mustBeInteger} = 10
+
+        % Process parameters
+        process_chunkTime (1,1) double {mustBePositive} = 20
+        process_overlap (1,1) double {mustBeNonnegative} = 0.05
+        process_progressBar (1,1) logical = true
+    end
+
+    properties (Dependent)
+        spikeSortingParameters
     end
 
     methods
@@ -44,57 +55,90 @@ classdef parameters
                 args.process_progressBar (1,1) logical = true
             end
 
-            % Assign arguments to structure
-            obj.spikeSortingParameters.settingsFile = args.settingsFile;
+            % Assign arguments to properties
+            obj.settingsFile = args.settingsFile;
 
-            obj.spikeSortingParameters.filter.cheby1Order = args.filter_cheby1Order;
-            obj.spikeSortingParameters.filter.cheby1Rolloff = args.filter_cheby1Rolloff;
-            obj.spikeSortingParameters.filter.cheby1Cutoff = args.filter_cheby1Cutoff;
-            obj.spikeSortingParameters.filter.medianFilterAcrossChannels = args.filter_medianFilterAcrossChannels;
+            obj.filter_cheby1Order = args.filter_cheby1Order;
+            obj.filter_cheby1Rolloff = args.filter_cheby1Rolloff;
+            obj.filter_cheby1Cutoff = args.filter_cheby1Cutoff;
+            obj.filter_medianFilterAcrossChannels = args.filter_medianFilterAcrossChannels;
 
-            obj.spikeSortingParameters.autothreshold.sigma = args.autothreshold_sigma;
-            obj.spikeSortingParameters.autothreshold.readTime = args.autothreshold_readTime;
-            obj.spikeSortingParameters.autothreshold.useMedian = args.autothreshold_useMedian;
+            obj.autothreshold_sigma = args.autothreshold_sigma;
+            obj.autothreshold_readTime = args.autothreshold_readTime;
+            obj.autothreshold_useMedian = args.autothreshold_useMedian;
 
-            obj.spikeSortingParameters.events.samples = args.events_samples;
-            obj.spikeSortingParameters.events.refractoryPeriodSamples = args.events_refractoryPeriodSamples;
-            obj.spikeSortingParameters.events.centerRange = args.events_centerRange;
+            obj.events_samples = args.events_samples;
+            obj.events_refractoryPeriodSamples = args.events_refractoryPeriodSamples;
+            obj.events_centerRange = args.events_centerRange;
 
-            obj.spikeSortingParameters.process.chunkTime = args.process_chunkTime;
-            obj.spikeSortingParameters.process.overlap = args.process_overlap;
-            obj.spikeSortingParameters.process.progressBar = args.process_progressBar;
+            obj.process_chunkTime = args.process_chunkTime;
+            obj.process_overlap = args.process_overlap;
+            obj.process_progressBar = args.process_progressBar;
+        end
+
+        function s = get.spikeSortingParameters(obj)
+            s.settingsFile = obj.settingsFile;
+            s.filter.cheby1Order = obj.filter_cheby1Order;
+            s.filter.cheby1Rolloff = obj.filter_cheby1Rolloff;
+            s.filter.cheby1Cutoff = obj.filter_cheby1Cutoff;
+            s.filter.medianFilterAcrossChannels = obj.filter_medianFilterAcrossChannels;
+
+            s.autothreshold.sigma = obj.autothreshold_sigma;
+            s.autothreshold.readTime = obj.autothreshold_readTime;
+            s.autothreshold.useMedian = obj.autothreshold_useMedian;
+
+            s.events.samples = obj.events_samples;
+            s.events.refractoryPeriodSamples = obj.events_refractoryPeriodSamples;
+            s.events.centerRange = obj.events_centerRange;
+
+            s.process.chunkTime = obj.process_chunkTime;
+            s.process.overlap = obj.process_overlap;
+            s.process.progressBar = obj.process_progressBar;
+        end
+
+        function set.spikeSortingParameters(obj, s)
+            if isfield(s, 'settingsFile'), obj.settingsFile = s.settingsFile; end
+            if isfield(s, 'filter')
+                f = s.filter;
+                if isfield(f, 'cheby1Order'), obj.filter_cheby1Order = f.cheby1Order; end
+                if isfield(f, 'cheby1Rolloff'), obj.filter_cheby1Rolloff = f.cheby1Rolloff; end
+                if isfield(f, 'cheby1Cutoff'), obj.filter_cheby1Cutoff = f.cheby1Cutoff; end
+                if isfield(f, 'medianFilterAcrossChannels'), obj.filter_medianFilterAcrossChannels = f.medianFilterAcrossChannels; end
+            end
+            if isfield(s, 'autothreshold')
+                a = s.autothreshold;
+                if isfield(a, 'sigma'), obj.autothreshold_sigma = a.sigma; end
+                if isfield(a, 'readTime'), obj.autothreshold_readTime = a.readTime; end
+                if isfield(a, 'useMedian'), obj.autothreshold_useMedian = a.useMedian; end
+            end
+            if isfield(s, 'events')
+                e = s.events;
+                if isfield(e, 'samples'), obj.events_samples = e.samples; end
+                if isfield(e, 'refractoryPeriodSamples'), obj.events_refractoryPeriodSamples = e.refractoryPeriodSamples; end
+                if isfield(e, 'centerRange'), obj.events_centerRange = e.centerRange; end
+            end
+            if isfield(s, 'process')
+                p = s.process;
+                if isfield(p, 'chunkTime'), obj.process_chunkTime = p.chunkTime; end
+                if isfield(p, 'overlap'), obj.process_overlap = p.overlap; end
+                if isfield(p, 'progressBar'), obj.process_progressBar = p.progressBar; end
+            end
         end
 
         function jsonStr = toJson(obj)
-            % Encode only obj.spikeSortingParameters
+            % Encode only obj.spikeSortingParameters (dependent property)
             jsonStr = jsonencode(obj.spikeSortingParameters, 'PrettyPrint', true);
         end
 
         function obj = fromJson(obj, jsonStr)
             data = jsondecode(jsonStr);
-
-            % We expect data to map to fields of obj.spikeSortingParameters
-            if isfield(data, 'settingsFile')
-                 obj.spikeSortingParameters.settingsFile = data.settingsFile;
-            end
-
-            if isfield(data, 'filter')
-                obj.spikeSortingParameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.filter, data.filter);
-            end
-            if isfield(data, 'autothreshold')
-                obj.spikeSortingParameters.autothreshold = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.autothreshold, data.autothreshold);
-            end
-            if isfield(data, 'events')
-                obj.spikeSortingParameters.events = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.events, data.events);
-            end
-            if isfield(data, 'process')
-                obj.spikeSortingParameters.process = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.process, data.process);
-            end
+            % Use dependent property setter
+            obj.spikeSortingParameters = data;
         end
 
         function saveToJson(obj, filename)
             if nargin < 2
-                filename = obj.spikeSortingParameters.settingsFile;
+                filename = obj.settingsFile;
             end
 
             if filename == ""
@@ -127,31 +171,42 @@ classdef parameters
         end
 
         function filename = getThresholdLevelFilename(probe, epochID)
-            % probe is likely an object, we need its name?
-            % The prompt says "probeName" in the description: [probeName ‘_’ epochID ‘.txt’]
-            % If probe is an object, maybe probe.name? Or probe is a string?
-            % "getThresholdLevelFilename (probe, epochID)"
-            % Assuming probe is the name string or object with name.
+            % Use elementstring and sanitize
             if ischar(probe) || isstring(probe)
                 pName = probe;
+            elseif isprop(probe, 'elementstring')
+                pName = probe.elementstring();
             elseif isprop(probe, 'name')
                 pName = probe.name;
             else
                 % Fallback or error
                 pName = 'unknown_probe';
             end
-            filename = [char(pName) '_' char(epochID) '.txt'];
+
+            % Sanitize pName: replace whitespace and '|'
+            pName = char(pName); % Ensure char for manipulation
+            pName(isspace(pName)) = '_';
+            pName = replace(pName, '|', '_');
+
+            filename = [pName '_' char(epochID) '.txt'];
         end
 
         function filename = getSpikeWaveformFilename(probe, epochID)
              if ischar(probe) || isstring(probe)
                 pName = probe;
+            elseif isprop(probe, 'elementstring')
+                pName = probe.elementstring();
             elseif isprop(probe, 'name')
                 pName = probe.name;
             else
                 pName = 'unknown_probe';
             end
-            filename = [char(pName) '_' char(epochID) '.vsw'];
+
+            pName = char(pName);
+            pName(isspace(pName)) = '_';
+            pName = replace(pName, '|', '_');
+
+            filename = [pName '_' char(epochID) '.vsw'];
         end
 
         function s_out = mergeStructs(s_default, s_new)
