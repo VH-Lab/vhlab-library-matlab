@@ -16,20 +16,21 @@ function varargout = setthresholds_gui(args)
         args.dirinfo = []
         args.dirlist = []
         args.channelhold = 0
-        args.channelmenu_lastvalue = 0
-        args.dirmenu_lastvalue = 0
-        args.success = 0
+        args.channelmenu_lastvalue = 0;
+        args.dirmenu_lastvalue = 0;
+        args.success = 0;
         args.datafile = ''
         args.headerfile = ''
-        args.windowheight = 800
-        args.windowwidth = 1000
-        args.windowrow = 35
-        args.start = 0
-        args.windowsize = 10
+        args.windowheight = 800;
+        args.windowwidth = 1000;
+        args.windowrow = 35;
+        args.start = 0;
+        args.windowsize = 10;
         args.threshold_update_list = []
-        args.MAX_SPIKE_SHAPES = 200
+        args.MAX_SPIKE_SHAPES = 200;
         args.command = 'Main'
         args.fig = []
+        args.verbose = true;
     end
 
     % Unpack
@@ -52,12 +53,13 @@ function varargout = setthresholds_gui(args)
     MAX_SPIKE_SHAPES = args.MAX_SPIKE_SHAPES;
     command = args.command;
     fig = args.fig;
+    verbose = args.verbose;
 
     varargout = cell(1,nargout);
 
     varlist = {'ndiSession','params','dirinfo','dirlist','channelhold','channelmenu_lastvalue','dirmenu_lastvalue','success',...
             'datafile','headerfile','windowheight','windowwidth','windowrow','start','windowsize',...
-            'threshold_update_list','MAX_SPIKE_SHAPES'};
+            'threshold_update_list','MAX_SPIKE_SHAPES','verbose'};
 
 
 if isempty(fig)
@@ -74,6 +76,10 @@ if strcmp(command,'Main')
     ud.epochs = {}; % To store epochs of selected probe
 else
 	ud = get(fig,'userdata');
+end
+
+if ud.verbose
+    disp(['setthresholds_gui Command: ' command]);
 end
 
 switch command
