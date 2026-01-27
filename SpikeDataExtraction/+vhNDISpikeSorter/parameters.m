@@ -21,30 +21,48 @@ classdef parameters
         function obj = parameters(args)
             arguments
                 args.settingsFile (1,1) string = ""
-                args.filter struct = struct('cheby1Order', 4, ...
-                        'cheby1Rolloff', 0.8, ...
-                        'cheby1Cutoff', 300, ...
-                        'medianFilterAcrossChannels', false)
-                args.autothreshold struct = struct('sigma', 4, ...
-                               'readTime', 100, ...
-                               'useMedian', false)
-                args.events struct = struct('samples', [-10 25], ...
-                        'refractoryPeriodSamples', 15, ...
-                        'centerRange', 10)
-                args.process struct = struct('chunkTime', 20, ...
-                         'overlap', 0.05, ...
-                         'progressBar', true)
+
+                % Filter parameters
+                args.filter_cheby1Order (1,1) double {mustBeNonnegative, mustBeInteger} = 4
+                args.filter_cheby1Rolloff (1,1) double {mustBeGreaterThan(args.filter_cheby1Rolloff, 0), mustBeLessThan(args.filter_cheby1Rolloff, 1)} = 0.8
+                args.filter_cheby1Cutoff (1,1) double {mustBePositive} = 300
+                args.filter_medianFilterAcrossChannels (1,1) logical = false
+
+                % Autothreshold parameters
+                args.autothreshold_sigma (1,1) double {mustBePositive} = 4
+                args.autothreshold_readTime (1,1) double {mustBePositive} = 100
+                args.autothreshold_useMedian (1,1) logical = false
+
+                % Events parameters
+                args.events_samples (1,2) double {mustBeInteger} = [-10 25]
+                args.events_refractoryPeriodSamples (1,1) double {mustBeNonnegative, mustBeInteger} = 15
+                args.events_centerRange (1,1) double {mustBeNonnegative, mustBeInteger} = 10
+
+                % Process parameters
+                args.process_chunkTime (1,1) double {mustBePositive} = 20
+                args.process_overlap (1,1) double {mustBeNonnegative} = 0.05
+                args.process_progressBar (1,1) logical = true
             end
 
-            % Update substructures merging with defaults
-            obj.spikeSortingParameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.filter, args.filter);
-            obj.spikeSortingParameters.autothreshold = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.autothreshold, args.autothreshold);
-            obj.spikeSortingParameters.events = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.events, args.events);
-            obj.spikeSortingParameters.process = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.process, args.process);
+            % Assign arguments to structure
+            obj.spikeSortingParameters.settingsFile = args.settingsFile;
 
-            if args.settingsFile ~= ""
-                obj.spikeSortingParameters.settingsFile = args.settingsFile;
-            end
+            obj.spikeSortingParameters.filter.cheby1Order = args.filter_cheby1Order;
+            obj.spikeSortingParameters.filter.cheby1Rolloff = args.filter_cheby1Rolloff;
+            obj.spikeSortingParameters.filter.cheby1Cutoff = args.filter_cheby1Cutoff;
+            obj.spikeSortingParameters.filter.medianFilterAcrossChannels = args.filter_medianFilterAcrossChannels;
+
+            obj.spikeSortingParameters.autothreshold.sigma = args.autothreshold_sigma;
+            obj.spikeSortingParameters.autothreshold.readTime = args.autothreshold_readTime;
+            obj.spikeSortingParameters.autothreshold.useMedian = args.autothreshold_useMedian;
+
+            obj.spikeSortingParameters.events.samples = args.events_samples;
+            obj.spikeSortingParameters.events.refractoryPeriodSamples = args.events_refractoryPeriodSamples;
+            obj.spikeSortingParameters.events.centerRange = args.events_centerRange;
+
+            obj.spikeSortingParameters.process.chunkTime = args.process_chunkTime;
+            obj.spikeSortingParameters.process.overlap = args.process_overlap;
+            obj.spikeSortingParameters.process.progressBar = args.process_progressBar;
         end
 
         function jsonStr = toJson(obj)
