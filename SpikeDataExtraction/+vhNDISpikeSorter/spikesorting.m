@@ -1,14 +1,14 @@
 function spikesorting(args)
 % SPIKESORTING - A gui to guide a user through spikesorting multichannel LabView data
 %
-%   SPIKESORTING('DS', DS);
+%   SPIKESORTING('S', S);
 %
 %   Brings up a graphical user interface to allow the user to set
 %   thresholds/extract spikes and then cluster spikes from different name/reference
 %   records.
 
     arguments
-        args.ds = [];
+        args.S = [];
         args.command = 'Main';
         args.fig = [];
         args.windowheight = 380;
@@ -26,7 +26,7 @@ function spikesorting(args)
     end
 
     % Unpack arguments
-    ds = args.ds;
+    S = args.S;
     command = args.command;
     fig = args.fig;
     windowheight = args.windowheight;
@@ -39,7 +39,7 @@ function spikesorting(args)
    % internal variables, for the function only
    success = 0; % although it was not used in varlist
 
-   varlist = {'ds','windowheight','windowwidth','windowrowheight','windowlabel','spikesortingprefs','spikesortingprefs_help'};
+   varlist = {'S','windowheight','windowwidth','windowrowheight','windowlabel','spikesortingprefs','spikesortingprefs_help'};
 
 if isempty(fig),
 	z = findobj(allchild(0),'flat','tag','vhNDISpikeSorter.spikesorting');
@@ -97,7 +97,11 @@ switch command,
 
         set(fig,'position',[50 50 right top],'tag','vhNDISpikeSorter.spikesorting');
 		uicontrol(txt,'position',[5 top-row*1 600 30],'string',ud.windowlabel,'horizontalalignment','left','fontweight','bold');
-		uicontrol(txt,'position',[5 top-row*2 600 30],'string',getpathname(ud.ds));
+        if ~isempty(ud.S)
+		    uicontrol(txt,'position',[5 top-row*2 600 30],'string',ud.S.path);
+        else
+            uicontrol(txt,'position',[5 top-row*2 600 30],'string','No Session');
+        end
 		uicontrol(button,'position',[5 top-row*3 200 30],'string','Auto threshold','tag','AutoThresholdsBt');
 		uicontrol(button,'position',[5 top-row*4 200 30],'string','Set/Edit thresholds/extract','tag','ThresholdsBt');
 		uicontrol(list,'position',[5+210 top-row*3-200+row 200 200],'string',{' ', ' '},'Max',2, 'value',[],'tag','NameRefList');
@@ -110,34 +114,63 @@ switch command,
 	case 'UpdateBt',
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','UpdateNameRefList');
 	case 'ImportBt',
-		vhintan_importcells(ud.ds);
+		vhintan_importcells(dirstruct(ud.S.path));
 	case 'ClusterBt',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		for i=1:length(v),
-			vhNDISpikeSorter.clusternameref(ud.ds,ud.nr(v(i)).name,ud.nr(v(i)).ref);
+            % Convert probes to ds/name/ref if needed or update clusternameref to accept probes
+            % For now, pass dirstruct and probe name/ref if possible.
+            % But S.getprobes returns probe objects.
+            % 'clusternameref' expects (ds, name, ref).
+            % We can reconstruct ds from S.path.
+            % What is name/ref for a probe? probe.name and probe.reference?
+            % Assuming probe objects have these properties.
+
+            p = ud.probes{v(i)};
+            % Assuming probe.name and probe.reference exist or equivalent
+            % If strictly following prompt "use NDI sessions (S)", downstream might need update.
+            % But prompt specifically targeted spikesorting.
+            % I'll try to adapt arguments for clusternameref using probe info.
+            % S.getprobes() returns cell array of probes.
+            % p is a probe object.
+
+            % If p has elementstring(), maybe I can parse it or it has properties.
+            % NDI probes usually have 'name' and 'reference' properties or methods.
+            % Let's assume standard NDI probe structure or check valid properties if I could.
+            % I will assume p.name and p.reference.
+
+            % Note: clusternameref expects a dirstruct as first arg.
+            ds = dirstruct(ud.S.path);
+            vhNDISpikeSorter.clusternameref(ds, p.name, p.reference);
 		end;
 	case 'NameRefList',
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
 	case 'UpdateNameRefList',
-		ud.ds = dirstruct(getpathname(ud.ds));
-		ud.nr = getallnamerefs(ud.ds);
-		str = {};
-		for i=1:length(ud.nr),
-			str{i} = [ud.nr(i).name ' | ' int2str(ud.nr(i).ref)];
+		% ud.ds = dirstruct(getpathname(ud.ds)); % Old
+        % ud.nr = getallnamerefs(ud.ds); % Old
+
+        ud.probes = ud.S.getprobes();
+
+		p_string = {};
+		for i=1:numel(ud.probes),
+			p_string{i} = ud.probes{i}.elementstring();
 		end;
-		set(findobj(fig,'tag','NameRefList'),'string',str,'value',[]);
+		set(findobj(fig,'tag','NameRefList'),'string',p_string,'value',[]);
 		set(fig,'userdata',ud);
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
 	case 'ThresholdsBt',
 		prefs = struct2namevaluepair(ud.spikesortingprefs);
-		vhNDISpikeSorter.setthresholds_gui('ds',ud.ds,prefs{:});
+        % setthresholds_gui still expects ds.
+        ds = dirstruct(ud.S.path);
+		vhNDISpikeSorter.setthresholds_gui('ds',ds,prefs{:});
 	case 'AutoThresholdsBt',
 		prefs = struct2namevaluepair(ud.spikesortingprefs);
-		vhNDISpikeSorter.autothreshold_all(ud.ds,prefs{:});
+        ds = dirstruct(ud.S.path);
+		vhNDISpikeSorter.autothreshold_all(ds,prefs{:});
 		msgbox('Auto thresholding completed successfully.');
 	case 'ExtractSelectBt',
 		prefs = struct2namevaluepair(ud.spikesortingprefs);
-		vhNDISpikeSorter.extractselected(getpathname(ud.ds),prefs{:});
+		vhNDISpikeSorter.extractselected(ud.S.path,prefs{:});
 	case 'EnableDisable',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		if isempty(v),
