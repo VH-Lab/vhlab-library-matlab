@@ -11,25 +11,25 @@ function varargout = setthresholds_gui(args)
 %
 
     arguments
-        args.ndiSession = [];
-        args.params = [];
-        args.dirinfo = [];
-        args.dirlist = [];
-        args.channelhold = 0;
-        args.channelmenu_lastvalue = 0;
-        args.dirmenu_lastvalue = 0;
-        args.success = 0;
-        args.datafile = '';
-        args.headerfile = '';
-        args.windowheight = 800;
-        args.windowwidth = 1000;
-        args.windowrow = 35;
-        args.start = 0;
-        args.windowsize = 10;
-        args.threshold_update_list = [];
-        args.MAX_SPIKE_SHAPES = 200;
-        args.command = 'Main';
-        args.fig = [];
+        args.ndiSession = []
+        args.params = []
+        args.dirinfo = []
+        args.dirlist = []
+        args.channelhold = 0
+        args.channelmenu_lastvalue = 0
+        args.dirmenu_lastvalue = 0
+        args.success = 0
+        args.datafile = ''
+        args.headerfile = ''
+        args.windowheight = 800
+        args.windowwidth = 1000
+        args.windowrow = 35
+        args.start = 0
+        args.windowsize = 10
+        args.threshold_update_list = []
+        args.MAX_SPIKE_SHAPES = 200
+        args.command = 'Main'
+        args.fig = []
     end
 
     % Unpack
@@ -60,39 +60,39 @@ function varargout = setthresholds_gui(args)
             'threshold_update_list','MAX_SPIKE_SHAPES'};
 
 
-if isempty(fig),
+if isempty(fig)
 	fig = figure;
-end;
+end
 
  % initialize user data field
 
-if strcmp(command,'Main'),
-	for i=1:length(varlist),
+if strcmp(command,'Main')
+	for i=1:length(varlist)
 		eval(['ud.' varlist{i} '=' varlist{i} ';']);
-	end;
+	end
     ud.probes = {}; % To store probes
     ud.epochs = {}; % To store epochs of selected probe
-else,
+else
 	ud = get(fig,'userdata');
-end;
+end
 
-%command,
-
-switch command,
-	case 'Main',
+switch command
+	case 'Main'
 		set(fig,'userdata',ud);
 		vhNDISpikeSorter.setthresholds_gui('command','NewWindow','fig',fig);
 		vhNDISpikeSorter.setthresholds_gui('command','UpdateBt','fig',fig);
-	case 'NewWindow',
+	case 'NewWindow'
 		% this callback was a nasty puzzle in quotations:
 		callbackstr = [  'eval([get(gcbf,''Tag'') ''(''''command'''','''''' get(gcbo,''Tag'') '''''' ,''''fig'''',gcbf);'']);'];
 		ud.voltagebuttondownfcn = [  'eval([get(gcf,''Tag'') ''(''''command'''','''''' ''VoltageAxesClick'' '''''' ,''''fig'''',gcf);'']);'];
+
+        figcolor = get(fig, 'Color');
 
 		button.Units = 'pixels';
 		button.BackgroundColor = [0.8 0.8 0.8];
 		button.HorizontalAlignment = 'center';
 		button.Callback = callbackstr;
-		txt.Units = 'pixels'; txt.BackgroundColor = [0.8 0.8 0.8];
+		txt.Units = 'pixels'; txt.BackgroundColor = figcolor;
 		txt.fontsize = 12; txt.fontweight = 'normal';
 		txt.HorizontalAlignment = 'left';txt.Style='text';
 		edit = txt; edit.BackgroundColor = [ 1 1 1]; edit.Style = 'Edit';
@@ -118,7 +118,7 @@ switch command,
 		uicontrol(txt,'position',[5 top-row*1 600 30],'string',['Threshold selection / spike extraction for ' dsname],'fontweight','bold','tag','InstructionTxt');
 		uicontrol(button,'position',[5 top-row*2 100 30],'string','DONE','fontweight','bold','tag','DoneBt');
 		uicontrol(button,'position',[5+100+10 top-row*2 100 30],'string','Extract','fontweight','bold','tag','ExtractBt');
-		uicontrol(button,'position',[5+100+10+5+100+50 top-row*2 125 30],'string','Match Axes','tag','MatchXYAxisBt');
+		uicontrol(button,'position',[5+100+10+5+100+50 top-row*2 125 30],'string','Match Y Axes','tag','MatchYAxisBt');
 		%uicontrol(button,'position',[5+100+10+5+100+50+125+5 top-row*2 125 30],'string','Match Y Axes','tag','MatchYAxisBt');
 		uicontrol(txt,'position',[5+100+10+5+100+50+125+5+125+5-50 top-row*2-4 150 30],'string','Start (s):','tag','StartTxt','horizontalalignment','right');
 		uicontrol(edit,'position',[5+100+10+5+100+50+125+5+125+5+100+5 top-row*2 100 30],'string',num2str(ud.start),'tag','StartEdit','callback',callbackstr);
@@ -129,15 +129,15 @@ switch command,
         uicontrol(txt,'position',[5 top-row*3-5 120 30],'string','Probe:','tag','ProbeLabelTxt');
 		uicontrol(popup,'position',[5+120+5 top-row*3-3 150 30],'string',{''},'tag','ProbePopup');
 
-        % Epochs popup (formerly Directory)
+        % Epochs popup
         uicontrol(txt,'position',[5+120+5+150+5 top-row*3-5 120 30],'string','Epoch:','tag','DirectoryLabelTxt');
-		uicontrol(popup,'position',[5+120+5+150+5+120+5 top-row*3-3 150 30],'string',{''},'tag','DirectoryPopup');
+		uicontrol(popup,'position',[5+120+5+150+5+120+5 top-row*3-3 150 30],'string',{''},'tag','EpochPopup');
 
         uicontrol(button,'position',[5+120+5+150+5+120+5+150+5 top-row*3 100 30],'string','Update','tag','UpdateBt');
 		uicontrol(button,'position',[5+120+5+150+5+120+5+150+5+100+5 top-row*3 275 30],'string','Copy last thresholds to new epochs','tag','CopyThresholdsBt');
 
 		set(fig,'userdata',ud);
-	case 'UpdateBt',
+	case 'UpdateBt'
 		% Populate Probes list
         if ~isempty(ud.ndiSession)
             ud.probes = ud.ndiSession.getprobes('type', 'n-trode');
@@ -151,7 +151,7 @@ switch command,
 		set(fig,'userdata',ud);
 		vhNDISpikeSorter.setthresholds_gui('command','ProbePopup','fig',fig);
 
-    case 'ProbePopup',
+    case 'ProbePopup'
         % Update Epochs list based on selected probe
         probe_idx = get(findobj(fig,'tag','ProbePopup'),'value');
         if ~isempty(ud.probes) && probe_idx <= numel(ud.probes)
@@ -163,50 +163,25 @@ switch command,
             end
             ud.epochs = epoch_labels;
             if isempty(epoch_labels), epoch_labels = {' '}; end
-            set(findobj(fig,'tag','DirectoryPopup'),'string',epoch_labels,'value',1);
+            set(findobj(fig,'tag','EpochPopup'),'string',epoch_labels,'value',1);
         else
-            set(findobj(fig,'tag','DirectoryPopup'),'string',{' '},'value',1);
+            set(findobj(fig,'tag','EpochPopup'),'string',{' '},'value',1);
             ud.epochs = {};
         end
         set(fig,'userdata',ud);
         vhNDISpikeSorter.setthresholds_gui('command','UpdateChannelMenu','fig',fig);
 
-	case 'CopyThresholdsBt',
-        % Logic to copy thresholds? "Copy last thresholds to new directories".
-        % Adapt to epochs? For now, placeholder or warn not implemented.
-		% dirmenu_currentvalue = get(findobj(fig,'tag','DirectoryPopup'),'value');
-		% outputstr = vhNDISpikeSorter.copythresholds(ud.ds,ud.dirlist{dirmenu_currentvalue});
+	case 'CopyThresholdsBt'
 		uiwait(msgbox('Copy thresholds not yet implemented for NDI epochs','Copy thresholds result'));
-		% vhNDISpikeSorter.setthresholds_gui('command','UpdateBt','fig',fig);
 
-	case 'UpdateChannelMenu',
-        % Update channel list not strictly needed if we assume probe handles it or we don't have a channel popup anymore?
-        % The GUI code had 'ChannelPopup'. Wait, I didn't verify if I kept it.
-        % In `NewWindow`, I see `ProbePopup`, `DirectoryPopup`. Where is `ChannelPopup`?
-        % The original code had:
-        % uicontrol(txt,'position',[...],'string','Channel list:','tag','ChannelLabelTxt');
-		% uicontrol(popup,'position',[...],'string',{''},'tag','ChannelPopup');
-        % I removed it in my `NewWindow` overwrite above?
-        % "Modify the ‘directory’ views so that it shows epochs...".
-        % I replaced Directory view.
-        % I should PROBABLY keep Channel list if the user wants to select a channel to view/threshold.
-        % The previous code: `channels_here = ud.dirinfo... channel_list`.
-        % With NDI, we assume all channels of the n-trode are relevant.
-        % But the GUI allows selecting one channel to view?
-        % `DrawAxes` draws all channels.
-        % `ChannelPopup` was used to switch *groups* of channels? `vhintan_filtermap`.
-        % NDI probes (n-trodes) are single groups. So maybe we don't need channel popup for grouping.
-        % But if we want to select which channel to edit? The `VoltageAxesClick` determines channel by axis clicked.
-        % So maybe we don't need `ChannelPopup` if it was for `filtermap` selection.
-        % I will assume we don't need it if the probe represents the whole group.
-
+	case 'UpdateChannelMenu'
         vhNDISpikeSorter.setthresholds_gui('command','Load','fig',fig);
 
-	case 'DirectoryPopup', % This is now EpochPopup
+	case 'EpochPopup'
 		% Just reload
         vhNDISpikeSorter.setthresholds_gui('command','Load','fig',fig);
 
-	case 'DrawAxes',
+	case 'DrawAxes'
 		top_axis = ud.windowheight - 3.5*ud.windowrow;
 		left_axis = 25;
 		right_axis = ud.windowwidth - 200;
@@ -215,44 +190,48 @@ switch command,
 		bottom_axis = 50;
 
 		oldaxes = findobj(fig,'-regexp','tag','VoltageAxes*');
-		try, delete(oldaxes); end;
+		try, delete(oldaxes); end
 		oldaxes = findobj(fig,'-regexp','tag','SpikeAxes*');
-		try, delete(oldaxes); end;
+		try, delete(oldaxes); end
 
 		ax_spaces = linspace(top_axis,bottom_axis,size(ud.D,2)+1);
-		ax_voltage = {};
-		ax_spike = {};
+		ax_voltage = [];
+		ax_spike = [];
 		chans = 1;
 		ymin_voltage = Inf;
 		ymax_voltage = -Inf;
-		for i=2:length(ax_spaces),
-			ax_voltage{chans} = axes('units','pixels','position',[left_axis ax_spaces(i) right_axis-left_axis ax_spaces(i-1)-ax_spaces(i)-5],'tag',['VoltageAxes' int2str(i-1)]);
+		for i=2:length(ax_spaces)
+			ax_voltage(chans) = axes('units','pixels','position',[left_axis ax_spaces(i) right_axis-left_axis ax_spaces(i-1)-ax_spaces(i)-5],'tag',['VoltageAxes' int2str(i-1)]);
 			plot(ud.T,ud.D(:,chans),'k');
 			A = axis;
 			axis([ud.start ud.start+ud.windowsize A(3) A(4)]);
-			if A(3)<ymin_voltage, ymin_voltage = A(3); end;
-			if A(4)>ymax_voltage, ymax_voltage = A(4); end;
+			if A(3)<ymin_voltage, ymin_voltage = A(3); end
+			if A(4)>ymax_voltage, ymax_voltage = A(4); end
 			ylabel('Volts');
 			box off;
-			if i==length(ax_spaces), xlabel('Time(s)'); end;
-			set(ax_voltage{chans},'tag',['VoltageAxes' int2str(i-1)],'buttondownfcn',ud.voltagebuttondownfcn);
-			ax_spike{chans}=axes('units','pixels','position',[spike_left_axis ax_spaces(i) spike_right_axis-spike_left_axis ax_spaces(i-1)-ax_spaces(i)-5],...
+			if i==length(ax_spaces), xlabel('Time(s)'); end
+			set(ax_voltage(chans),'tag',['VoltageAxes' int2str(i-1)],'buttondownfcn',ud.voltagebuttondownfcn);
+			ax_spike(chans)=axes('units','pixels','position',[spike_left_axis ax_spaces(i) spike_right_axis-spike_left_axis ax_spaces(i-1)-ax_spaces(i)-5],...
 				'tag',['SpikeAxes' int2str(i-1)]);
 			axis off;
 			chans = chans + 1;
-		end;
+		end
 
-		for i=1:chans-1,
-			axes(ax_voltage{i});
+        if ~isempty(ax_voltage)
+            linkaxes(ax_voltage, 'x');
+        end
+
+		for i=1:chans-1
+			axes(ax_voltage(i));
 			axis([ud.start ud.start+ud.windowsize ymin_voltage ymax_voltage]);
-		end;
+		end
 
 		vhNDISpikeSorter.setthresholds_gui('command','DrawThresholds','fig',fig);
 
-	case 'DrawThresholds',  % draw threshold AND update spike axes
+	case 'DrawThresholds'  % draw threshold AND update spike axes
         % Load thresholds for the current probe/epoch
         probe_idx = get(findobj(fig,'tag','ProbePopup'),'value');
-        epoch_idx = get(findobj(fig,'tag','DirectoryPopup'),'value');
+        epoch_idx = get(findobj(fig,'tag','EpochPopup'),'value');
 
         if isempty(ud.probes) || isempty(ud.epochs), return; end
         probe = ud.probes{probe_idx};
@@ -269,37 +248,36 @@ switch command,
             thresholds = [];
         end
 
-		if isempty(thresholds),
+		if isempty(thresholds)
 			return;  % nothing to do
-		end;
+		end
 
         num_channels = size(ud.D, 2);
 
 		chans_to_update = 1:num_channels;
-		if ~isempty(ud.threshold_update_list),
+		if ~isempty(ud.threshold_update_list)
 			chans_to_update = chans_to_update(ud.threshold_update_list);
-		end;
+		end
 		currentAx = gca;
-		for i=chans_to_update,
+		for i=chans_to_update
 			myaxes = findobj(fig,'tag',['VoltageAxes' int2str(i)]);
-			if ~isempty(myaxes),
+			if ~isempty(myaxes)
 				axes(myaxes);
 				myoldplot = findobj(myaxes,'tag','threshold_plot');
-				if ~isempty(myoldplot), delete(myoldplot); end;
+				if ~isempty(myoldplot), delete(myoldplot); end
 				myoldplot = findobj(myaxes,'tag','threshold_dot_plot');
-				if ~isempty(myoldplot), delete(myoldplot); end;
+				if ~isempty(myoldplot), delete(myoldplot); end
 				A=axis;
 
                 % Find threshold for this channel (assuming channel ID matches index or we map it)
-                % NDI probe channels... assuming simple 1..N mapping as in autothreshold_epoch
                 chanID = i;
 				[dummy,z] = intersect([thresholds.channel], chanID);
-				if ~isempty(z),
+				if ~isempty(z)
 					if thresholds(z).threshold(2)<0, % if no negative threshold
 						col = 'g'; % plot negative thresholds in green
-					else,
+					else
 						col = 'b'; % plot positive thresholds in blue
-					end;
+					end
 					hold on;
 					plot([-10000 10000],thresholds(z).threshold(1)*[1 1],col,'tag','threshold_plot');
 					AA = axis;
@@ -312,13 +290,13 @@ switch command,
 					locs = dotdisc(double(ud.D(:,i)),thresholds(z).threshold);
 					locs = refractory(locs, ref_samples);
 					plot(ud.T(locs),ud.D(locs,i),['o' col],'tag','threshold_dot_plot');
-					if length(locs)>ud.MAX_SPIKE_SHAPES, locs = locs(1:ud.MAX_SPIKE_SHAPES); end;
+					if length(locs)>ud.MAX_SPIKE_SHAPES, locs = locs(1:ud.MAX_SPIKE_SHAPES); end
 					locs = locs(find(locs<(length(ud.D(:,i))-samples(2))));
 					locs = locs(find(locs>1-samples(1)));
 					myspike = findobj(fig,'tag',['SpikeAxes' int2str(i)]);
 					axes(myspike);
 					cla;
-					if length(locs)>0,
+					if length(locs)>0
 						v1 = repmat(samples(1):samples(2),length(locs),1);
 						v2 = repmat(locs,1,diff([samples(1) samples(2)])+1);
 						dt = ud.T(2)-ud.T(1);
@@ -329,18 +307,18 @@ switch command,
 						Az = axis;
 						axis([ dt*samples([1 2]) AA(3) AA(4)]);
 						axis off;
-					end;
+					end
 					set(myspike,'tag',['SpikeAxes' int2str(i)]);
-				end;
-			else,
+				end
+			else
 				% error(['Cannot find VoltageAxes VoltageAxes' int2str(i) ]);
                 % Maybe channel count mismatch, ignore
-			end;
-		end;
+			end
+		end
 		axes(currentAx);
 		ud.threshold_update_list = [];
 		set(fig,'userdata',ud);
-	case 'VoltageAxesClick',  % this sets the threshold for a given channel
+	case 'VoltageAxesClick'  % this sets the threshold for a given channel
 		% find which axes is current, and get its number
 		ax = gca;
 		axesname = get(ax,'tag');
@@ -351,7 +329,7 @@ switch command,
 		pt = pt(1,2);
 
         probe_idx = get(findobj(fig,'tag','ProbePopup'),'value');
-        epoch_idx = get(findobj(fig,'tag','DirectoryPopup'),'value');
+        epoch_idx = get(findobj(fig,'tag','EpochPopup'),'value');
         probe = ud.probes{probe_idx};
         epochID = ud.epochs{epoch_idx};
 
@@ -370,21 +348,21 @@ switch command,
             existing_thresholds = struct('channel',{},'threshold',{});
         end
 
-		if isempty(existing_thresholds),
+		if isempty(existing_thresholds)
 			existing_thresholds = newthreshold;
-		else,
+		else
 			z = find([existing_thresholds.channel]==channel_value);
-			if isempty(z),
+			if isempty(z)
 				existing_thresholds(end+1) = newthreshold;
-			elseif length(z)==1,
+			elseif length(z)==1
 				existing_thresholds(z) = newthreshold;
-			else,
+			else
                 % Handle duplicates or error
 				existing_thresholds(z(1)) = newthreshold;
-			end;
+			end
 			[sorted_values,sorted_indexes] = sort([existing_thresholds.channel]);
 			existing_thresholds = existing_thresholds(sorted_indexes);
-		end;
+		end
 
 		% Save to disk
         if ~exist(settingsDir, 'dir'), mkdir(settingsDir); end
@@ -396,9 +374,9 @@ switch command,
 		set(fig,'userdata',ud);
 		% vhNDISpikeSorter.setthresholds_gui('fig',fig,'command','UpdateChannelMenu'); % Not needed?
 		vhNDISpikeSorter.setthresholds_gui('fig',fig,'command','DrawThresholds');
-	case 'Load',
+	case 'Load'
         probe_idx = get(findobj(fig,'tag','ProbePopup'),'value');
-        epoch_idx = get(findobj(fig,'tag','DirectoryPopup'),'value');
+        epoch_idx = get(findobj(fig,'tag','EpochPopup'),'value');
 
         if isempty(ud.probes) || isempty(ud.epochs)
             return;
@@ -416,7 +394,11 @@ switch command,
         end
 
         % Filter
-        sr = probe.samplerate(epochID);
+        try
+            sr = probe.samplerate(epochID);
+        catch
+            sr = 1; % Should error?
+        end
         f_params = ud.params.spikeSortingParameters.filter;
 
         if f_params.cheby1Order > 0
@@ -437,79 +419,54 @@ switch command,
 		ud.D = single(ud.D);
 		set(fig,'userdata',ud);
 		vhNDISpikeSorter.setthresholds_gui('fig',fig,'command','DrawAxes');
-	case {'MatchXYAxisBt'},
+
+	case 'MatchYAxisBt'
+        % Match Y limits of all voltage axes to the current axis
 		ax = gca;
 		A = axis;
 		theaxes = findobj(fig,'-regexp','tag','VoltageAxes*');
-		for i=1:length(theaxes),
-			axes(theaxes(i));
-			axis(A);
-		end;
-		theaxes = findobj(fig,'-regexp','tag','SpikeAxes*');
-		for i=1:length(theaxes),
+		for i=1:length(theaxes)
 			axes(theaxes(i));
 			A2 = axis;
-			axis([A2([1 2]) A(3) A(4)]);
-		end;
+            % Set Y limits to A(3:4), keep X limits (which are linked anyway)
+			axis([A2(1) A2(2) A(3) A(4)]);
+		end
 		axes(ax);
-	case {'MatchXAxisBt','MatchYAxisBt'},
-		ax = gca;
-		A = axis;
-		%get(ax,'tag'),
-		theaxes = findobj(fig,'-regexp','tag','VoltageAxes*');
-		for i=1:length(theaxes),
-			axes(theaxes(i));
-			A2 = axis;
-			if strcmp(command,'MatchXAxisBt'),
-				axis(([A(1) A(2) A2(3) A2(4)]));
-			elseif strcmp(command,'MatchYAxisBt'),
-				axis(([A2(1) A2(2) A(3) A(4)]));
-			end;
-		end;
-		axes(ax);
+
 	case {'StartEdit','DurationEdit'}
 		newstartstring  = get(findobj(fig,'tag','StartEdit'),'string');
 		newdurationstring  = get(findobj(fig,'tag','DurationEdit'),'string');
 		newstartvalue = str2num(newstartstring);
 		newdurationvalue = str2num(newdurationstring);
-		if newstartvalue~=ud.start | newdurationvalue~=ud.windowsize,
+		if newstartvalue~=ud.start | newdurationvalue~=ud.windowsize
 			ud.start = newstartvalue;
 			ud.windowsize = newdurationvalue;
 			set(fig,'userdata',ud);
 			vhNDISpikeSorter.setthresholds_gui('fig',fig,'command','Load');
-		end;
-	case 'DoneBt',
+		end
+	case 'DoneBt'
 		b = 1;
-		if b,
+		if b
 			ud.success = 1;
 			set(fig,'userdata',ud);
 			%uiresume(fig);
 			close(fig);
-		else,
+		else
 			%errordlg(['Please make sure a quality label has been assigned to all clusters.'],'Assign quality label');
-		end;
-	case 'CancelBt',  % there is no cancel button anymore, but we'll leave this here in case it comes back
+		end
+	case 'CancelBt'  % there is no cancel button anymore, but we'll leave this here in case it comes back
 		ud.success = 0;
 		set(fig,'userdata',ud);
 		uiresume(fig);
-	case 'ExtractBt',
-        % Extract for current epoch? Or all?
-        % The prompt doesn't specify, but implies extract button still exists.
-        % "Modify the ‘directory’ views so that it shows epochs... instead of directories"
-        % I'll assume Extract applies to the current epoch.
+	case 'ExtractBt'
         probe_idx = get(findobj(fig,'tag','ProbePopup'),'value');
-        epoch_idx = get(findobj(fig,'tag','DirectoryPopup'),'value');
+        epoch_idx = get(findobj(fig,'tag','EpochPopup'),'value');
         if ~isempty(ud.probes) && ~isempty(ud.epochs)
             probe = ud.probes{probe_idx};
             epochID = ud.epochs{epoch_idx};
-            % Call extract function (not yet refactored to take probe/epoch/params, but assuming it will be or we use legacy wrapper if possible, or stub)
-            % Wait, extractwaveforms takes (dirname, ...).
-            % I can't easily call it.
-            % I'll display a message.
             msgbox('Extracting from GUI not fully adapted to NDI epochs yet. Please use main menu Extract button.');
         end
 		ud.channelhold = 1;
 		set(fig,'userdata',ud);
-		% vhNDISpikeSorter.setthresholds_gui('fig',fig,'command','UpdateChannelMenu');
 
-end; % switch command
+end % switch command
