@@ -11,8 +11,8 @@ function autothreshold_all(ndiSession, params)
 %
 
     arguments
-        ndiSession
-        params
+        ndiSession {mustBeA(ndiSession, 'ndi.session')}
+        params {mustBeA(params, 'vhNDISpikeSorter.parameters')}
     end
 
     % Get all n-trode probes

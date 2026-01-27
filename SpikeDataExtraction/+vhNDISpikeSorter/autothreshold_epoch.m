@@ -8,9 +8,9 @@ function autothreshold_epoch(probe, epochID, params)
 %   Thresholds are saved to a text file determined by PARAMS.getThresholdLevelFilename.
 
     arguments
-        probe
+        probe {mustBeA(probe, 'ndi.probe')}
         epochID (1,1) string
-        params
+        params {mustBeA(params, 'vhNDISpikeSorter.parameters')}
     end
 
     % Extract parameters
