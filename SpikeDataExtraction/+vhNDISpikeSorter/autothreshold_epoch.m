@@ -20,18 +20,17 @@ function autothreshold_epoch(probe, epochID, params)
     medianFilter = params.spikeSortingParameters.filter.medianFilterAcrossChannels;
 
     % Read data
-    % Use readTimeSeries. We read 'readTime' amount of data from the beginning (0).
-    % Calling convention: data = readTimeSeries(probe, epochID, t0, t1)
+    % Use readtimeseries. We read 'readTime' amount of data from the beginning (0).
+    % Calling convention: data = readtimeseries(probe, epochID, t0, t1)
 
-    % Note: readTimeSeries returns [data, time] usually, or just data.
-    % NDI readTimeSeries: read_timeseries(probe, epoch, t0, t1)
+    % Note: readtimeseries returns [data, time] usually, or just data.
+    % NDI readtimeseries: readtimeseries(probe, epoch, t0, t1)
     % Assuming t0=0, t1=readTime.
 
     try
-        [data, t] = probe.read_timeseries(epochID, 0, readTime);
+        [data, t] = probe.readtimeseries(epochID, 0, readTime);
     catch err
-        warning('Could not read data for probe %s epoch %s: %s', probe.name, epochID, err.message);
-        return;
+        error('Could not read data for probe %s epoch %s: %s', probe.name, epochID, err.message);
     end
 
     % Filter data if needed (e.g. high pass).
@@ -63,7 +62,7 @@ function autothreshold_epoch(probe, epochID, params)
         % Wait, existing code: D = D - repmat(median(D,2),1,length(filtermap(i).channel_list));
         % Existing code D was (Channels x Samples) or (Samples x Channels)?
         % read_Intan_RHD2000_datafile usually returns Channels x Samples if 'amp'.
-        % But let's check NDI read_timeseries convention. Usually Samples x Channels.
+        % But let's check NDI readtimeseries convention. Usually Samples x Channels.
         % If Samples x Channels, median(data, 2) is median across channels for each sample.
         % So repmat(median(data, 2), 1, numChannels) matches size.
 
@@ -90,7 +89,7 @@ function autothreshold_epoch(probe, epochID, params)
     % Previous code used 'filtermap(i).channel_list(j)'.
 
     % For now, I'll use 1:numChannels unless probe gives specific channel IDs.
-    % Assuming NDI read_timeseries returns channels in order of probe definition.
+    % Assuming NDI readtimeseries returns channels in order of probe definition.
 
     for j = 1:numChannels
         if useMedian
