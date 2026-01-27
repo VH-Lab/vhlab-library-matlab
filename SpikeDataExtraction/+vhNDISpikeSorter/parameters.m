@@ -202,6 +202,27 @@ classdef parameters < handle
             filename = ['spiketimes_' pName '_' char(epochID) '.vst'];
         end
 
+        function filename = getClusterInfoFilename(probe, clusterID)
+            pName = probe.elementstring();
+
+            pName = char(pName);
+            pName(isspace(pName)) = '_';
+            pName = replace(pName, '|', '_');
+
+            filename = ['clusterinfo_' pName '_' sprintf('%03d', clusterID) '.mat'];
+        end
+
+        function filename = getClusterSpikeTimesFilename(probe, clusterID, epochID)
+            pName = probe.elementstring();
+
+            pName = char(pName);
+            pName(isspace(pName)) = '_';
+            pName = replace(pName, '|', '_');
+
+            % Per-epoch file
+            filename = ['sorted_spiketimes_' pName '_' char(epochID) '_' sprintf('%03d', clusterID) '.txt'];
+        end
+
         function s_out = mergeStructs(s_default, s_new)
             s_out = s_default;
             if isempty(s_new)

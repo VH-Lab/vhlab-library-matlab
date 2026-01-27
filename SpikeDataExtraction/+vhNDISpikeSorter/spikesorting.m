@@ -143,8 +143,8 @@ switch command,
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		for i=1:length(v),
             p = ud.probes{v(i)};
-            % Note: clusternameref now accepts (ndiSession, probe)
-            vhNDISpikeSorter.clusternameref(ud.ndiSession, p);
+            % Call updated clusterprobe
+            vhNDISpikeSorter.clusterprobe(ud.ndiSession, p);
 		end;
 	case 'NameRefList',
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
