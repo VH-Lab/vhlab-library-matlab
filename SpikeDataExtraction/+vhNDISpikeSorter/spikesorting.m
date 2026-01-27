@@ -164,15 +164,17 @@ switch command,
 		set(fig,'userdata',ud);
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
 	case 'ThresholdsBt',
-        % Call setthresholds_gui with ndiSession and params
-		vhNDISpikeSorter.setthresholds_gui('ndiSession',ud.ndiSession, 'params', ud.params);
+		prefs = struct2namevaluepair(ud.spikesortingprefs);
+        % setthresholds_gui still expects ds.
+        ds = dirstruct(ud.ndiSession.path);
+		vhNDISpikeSorter.setthresholds_gui('ds',ds,prefs{:});
 	case 'AutoThresholdsBt',
         % Call autothreshold_all with ndiSession and params
         vhNDISpikeSorter.autothreshold_all(ud.ndiSession, ud.params);
 		msgbox('Auto thresholding completed successfully.');
 	case 'ExtractSelectBt',
-		prefs = struct2namevaluepair(ud.spikesortingprefs);
-		vhNDISpikeSorter.extractselected(ud.ndiSession.path,prefs{:});
+        % Updated to use correct arguments for extractselected
+		vhNDISpikeSorter.extractselected(ud.ndiSession, ud.params);
 	case 'EnableDisable',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		if isempty(v),
