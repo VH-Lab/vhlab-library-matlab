@@ -1,85 +1,112 @@
-function extractselected(dirname, args)
-% EXTRACTSELECTED - Extract spikes from user-specified directories for a given experiment
+function extractselected(ndiSession, params)
+% EXTRACTSELECTED - Extract spikes from user-specified epochs for a given session
 %
-%    EXTRACTSELECTED(DIRNAME, ...)
+%    EXTRACTSELECTED(NDISESSION, PARAMS)
 %
-%    Extracts spikes from user-specified test directories in DIRNAME.
-%    The user is presented with a dialog box to choose the extraction parameters
-%    and a second dialog box to choose the directories to be extracted.
+%    Extracts spikes from user-specified epochs in the NDI session.
+%    The user is presented with dialog boxes to choose probes and then epochs.
 %
-%    One can pass additional arguments to the function to modify the default behavior
-%    using name/value pairs:
+%    NDISESSION is an ndi.session object.
+%    PARAMS is a vhNDISpikeSorter.parameters object.
 %
-%    Parameter (default)              :  Description
-%    ---------------------------------------------------------------------------
-%    MEDIAN_FILTER_ACROSS_CHANNELS (1):  0/1 Should we median filter across channels?
-%                                     :     (uses vhintan_filtermap.txt -- see help for this file)
-%    SAMPLES ([-10 25])               :  [S0 S1] The number of samples to read around
-%                                     :     each threshold crossing
-%    REFRACTORY_PERIOD_SAMPLES (15)   :  Minimum number of samples that must occur
-%                                     :     between reported spikes (spikes that are detected with
-%                                     :     shorter intervals will be ignored)
-%
-
- % step 1 - assign default parameters and modify for user preferences
 
     arguments
-        dirname
-        args.MEDIAN_FILTER_ACROSS_CHANNELS = 0;
-        args.SAMPLES = [-10 25];
-        args.REFRACTORY_PERIOD_SAMPLES = 15;
+        ndiSession {mustBeA(ndiSession, 'ndi.session')}
+        params {mustBeA(params, 'vhNDISpikeSorter.parameters')}
     end
 
-    MEDIAN_FILTER_ACROSS_CHANNELS = args.MEDIAN_FILTER_ACROSS_CHANNELS;
-    SAMPLES = args.SAMPLES;
-    REFRACTORY_PERIOD_SAMPLES = args.REFRACTORY_PERIOD_SAMPLES;
+    % Step 1: Select Probes
+    probes = ndiSession.getprobes('type', 'n-trode');
+    if isempty(probes)
+        msgbox('No n-trode probes found in session.');
+        return;
+    end
 
+    probe_names = {};
+    for i=1:numel(probes)
+        probe_names{i} = probes{i}.elementstring();
+    end
 
- % step 1 - get the parameters
+    [s_probes, ok] = listdlg('PromptString', 'Select probes to extract', ...
+                             'SelectionMode', 'multiple', ...
+                             'ListString', probe_names);
 
-prompts = {'Perform median filter? (0/1)', 'Samples around spikes [begin end]', 'Refractory samples [N]'};
-default_answers = { int2str(MEDIAN_FILTER_ACROSS_CHANNELS), mat2str(SAMPLES), int2str(REFRACTORY_PERIOD_SAMPLES) };
-windowname = 'Choose extraction parameters';
-numlines = 1;
-options.Resize = 'on';
-options.WindowStyle = 'normal';
-options.Interpreter = 'none';
+    if ~ok || isempty(s_probes)
+        return;
+    end
 
-answer = inputdlg(prompts,windowname,numlines,default_answers,options);
+    selected_probes = probes(s_probes);
 
-if isempty(answer), return; end; % user cancelled
+    % Step 2: Select Epochs for each probe (or aggregate?)
+    % The prompt says: "The user should first choose from a list of probes. Then the program should build up a list of epochs from those probes that the user selects. Then the program should loop over calls to extractwaveforms..."
 
-MEDIAN_FILTER_ACROSS_CHANNELS = str2num(answer{1});
-SAMPLES = str2num(answer{2});
-REFRACTORY_PERIOD_SAMPLES = str2num(answer{3});
+    % Get all unique epoch IDs across selected probes? Or allow selecting epochs available to ALL?
+    % Or list all [Probe - Epoch] combinations?
+    % "build up a list of epochs from those probes that the user selects"
+    % Often we want to extract the same epochs for all probes.
+    % Let's get union of epochs or intersection?
+    % Or list all epochs present in ANY of the probes?
+    % Let's assume we list all unique epoch IDs found in the selected probes.
 
- % step 2 - get the directories
+    all_epoch_ids = {};
+    probe_map = struct(); % Map epochID to list of probes that have it
 
-ds = dirstruct(dirname);
-T = getalltests(ds);
+    for i=1:numel(selected_probes)
+        et = selected_probes{i}.epochtable();
+        for j=1:numel(et)
+            eid = et(j).epoch_id;
+            all_epoch_ids = [all_epoch_ids; eid];
+            if ~isfield(probe_map, ['e_' eid]) % fields must be valid chars
+                 % We can just store usage count or check existence later
+            end
+        end
+    end
+    all_epoch_ids = unique(all_epoch_ids);
 
-[s,ok] = listdlg('PromptString','Select directories to extract','SelectionMode','multiple','ListString',T);
+    if isempty(all_epoch_ids)
+        msgbox('No epochs found for selected probes.');
+        return;
+    end
 
-if ok,
-    RunExperimentGlobals;
-    usep = ~isempty(VH_UseParallel);
-    if usep,
-        usep = VH_UseParallel;
-    end;
+    [s_epochs, ok] = listdlg('PromptString', 'Select epochs to extract', ...
+                             'SelectionMode', 'multiple', ...
+                             'ListString', all_epoch_ids);
 
-    if usep,
-        disp('Beginning parallel extraction..you will observe no feedback..wait');
-        parfor t=1:length(s),
-            vhNDISpikeSorter.extractwaveforms([getpathname(ds) filesep T{s(t)}], SAMPLES, REFRACTORY_PERIOD_SAMPLES, ...
-		'MEDIAN_FILTER_ACROSS_CHANNELS',MEDIAN_FILTER_ACROSS_CHANNELS);
-		vhNDISpikeSorter.sync2spike2([getpathname(ds) filesep T{s(t)}]);
-        end;
-        disp('Parallel extraction completed successfully');
-    else,
-	for t=1:length(s),
-		vhNDISpikeSorter.extractwaveforms([getpathname(ds) filesep T{s(t)}], SAMPLES, REFRACTORY_PERIOD_SAMPLES, ...
-			'MEDIAN_FILTER_ACROSS_CHANNELS',MEDIAN_FILTER_ACROSS_CHANNELS);
-		vhNDISpikeSorter.sync2spike2([getpathname(ds) filesep T{s(t)}]);
-        end;
-	end;
-end;
+    if ~ok || isempty(s_epochs)
+        return;
+    end
+
+    selected_epochs = all_epoch_ids(s_epochs);
+
+    % Step 3: Loop and Extract
+    % Loop over selected probes, and for each, loop over selected epochs IF the probe has that epoch.
+
+    % Parallel processing?
+    % Check preferences or assume serial for now unless specified.
+    % "Then the program should loop over calls to extractwaveforms to get it done."
+
+    % We can use parallel pool if available.
+    use_parallel = false; % Make optional later?
+
+    disp('Starting extraction...');
+
+    for i=1:numel(selected_probes)
+        p = selected_probes{i};
+        et = p.epochtable();
+        p_epochs = {et.epoch_id};
+
+        for j=1:numel(selected_epochs)
+            eid = selected_epochs{j};
+            if ismember(eid, p_epochs)
+                disp(['Extracting Probe: ' p.elementstring() ', Epoch: ' eid]);
+                try
+                    vhNDISpikeSorter.extractwaveforms(p, eid, params);
+                catch err
+                    warning('Extraction failed for %s / %s: %s', p.elementstring(), eid, err.message);
+                end
+            end
+        end
+    end
+
+    disp('Extraction finished.');
+end
