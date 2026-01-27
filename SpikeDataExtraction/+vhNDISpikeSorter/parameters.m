@@ -174,8 +174,10 @@ classdef parameters < handle
             % Use elementstring and sanitize
             if ischar(probe) || isstring(probe)
                 pName = probe;
-            elseif isprop(probe, 'elementstring')
+            elseif ismethod(probe, 'elementstring')
                 pName = probe.elementstring();
+            elseif isprop(probe, 'elementstring')
+                pName = probe.elementstring;
             elseif isprop(probe, 'name')
                 pName = probe.name;
             else
@@ -194,8 +196,10 @@ classdef parameters < handle
         function filename = getSpikeWaveformFilename(probe, epochID)
              if ischar(probe) || isstring(probe)
                 pName = probe;
-            elseif isprop(probe, 'elementstring')
+            elseif ismethod(probe, 'elementstring')
                 pName = probe.elementstring();
+            elseif isprop(probe, 'elementstring')
+                pName = probe.elementstring;
             elseif isprop(probe, 'name')
                 pName = probe.name;
             else
