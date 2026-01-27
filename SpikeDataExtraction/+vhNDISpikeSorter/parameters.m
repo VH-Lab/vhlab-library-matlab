@@ -1,7 +1,5 @@
 classdef parameters
     properties
-        probe {mustBeA(probe, 'ndi.probe')} = ndi.probe.empty()
-
         parameters = struct('settingsFile', "", ...
             'filter', struct('cheby1Order', 4, ...
                         'cheby1Rolloff', 0.8, ...
@@ -22,7 +20,6 @@ classdef parameters
     methods
         function obj = parameters(args)
             arguments
-                args.probe {mustBeA(args.probe, 'ndi.probe'), mustBeNonempty}
                 args.settingsFile (1,1) string = ""
                 args.filter struct = struct('cheby1Order', 4, ...
                         'cheby1Rolloff', 0.8, ...
@@ -39,8 +36,6 @@ classdef parameters
                          'progressBar', true)
             end
 
-            obj.probe = args.probe;
-
             % Update substructures merging with defaults
             obj.parameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.filter, args.filter);
             obj.parameters.autothreshold = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.autothreshold, args.autothreshold);
@@ -49,15 +44,6 @@ classdef parameters
 
             if args.settingsFile ~= ""
                 obj.parameters.settingsFile = args.settingsFile;
-            elseif ~isempty(obj.probe)
-                % Assuming probe has session property with path, and name property
-                % We use try-catch or safe access if not guaranteed
-                try
-                     obj.parameters.settingsFile = fullfile(obj.probe.session.path, '.vhSpikeSorter', obj.probe.name);
-                catch
-                    % Fallback if properties missing
-                     obj.parameters.settingsFile = "";
-                end
             end
         end
 

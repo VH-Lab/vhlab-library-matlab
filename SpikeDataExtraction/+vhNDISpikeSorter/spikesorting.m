@@ -1,14 +1,14 @@
 function spikesorting(args)
 % SPIKESORTING - A gui to guide a user through spikesorting multichannel LabView data
 %
-%   SPIKESORTING('S', S);
+%   SPIKESORTING('ndiSession', ndiSession);
 %
 %   Brings up a graphical user interface to allow the user to set
 %   thresholds/extract spikes and then cluster spikes from different name/reference
 %   records.
 
     arguments
-        args.S = [];
+        args.ndiSession = [];
         args.command = 'Main';
         args.fig = [];
         args.windowheight = 380;
@@ -26,7 +26,7 @@ function spikesorting(args)
     end
 
     % Unpack arguments
-    S = args.S;
+    ndiSession = args.ndiSession;
     command = args.command;
     fig = args.fig;
     windowheight = args.windowheight;
@@ -39,7 +39,7 @@ function spikesorting(args)
    % internal variables, for the function only
    success = 0; % although it was not used in varlist
 
-   varlist = {'S','windowheight','windowwidth','windowrowheight','windowlabel','spikesortingprefs','spikesortingprefs_help'};
+   varlist = {'ndiSession','windowheight','windowwidth','windowrowheight','windowlabel','spikesortingprefs','spikesortingprefs_help'};
 
 if isempty(fig),
 	z = findobj(allchild(0),'flat','tag','vhNDISpikeSorter.spikesorting');
@@ -58,6 +58,22 @@ if strcmp(command,'Main'),
 	for i=1:length(varlist),
 		eval(['ud.' varlist{i} '=' varlist{i} ';']);
 	end;
+
+    % Check for preferences file
+    if ~isempty(ud.ndiSession)
+        prefsPath = fullfile(ud.ndiSession.path, 'vhNDISorter', 'preferences.json');
+        if exist(prefsPath, 'file')
+            ud.params = vhNDISpikeSorter.parameters();
+            ud.params = ud.params.fromJson(fileread(prefsPath));
+            ud.params.parameters.settingsFile = prefsPath; % Ensure path is set
+        else
+            ud.params = vhNDISpikeSorter.parameters('settingsFile', prefsPath);
+            ud.params.saveToJson();
+        end
+    else
+        ud.params = vhNDISpikeSorter.parameters();
+    end
+
 else,
 	ud = get(fig,'userdata');
 end;
@@ -100,8 +116,8 @@ switch command,
 
         set(fig,'position',[50 50 right top],'tag','vhNDISpikeSorter.spikesorting');
 		uicontrol(txt,'position',[5 top-row*1 600 30],'string',ud.windowlabel,'horizontalalignment','left','fontweight','bold');
-        if ~isempty(ud.S)
-		    uicontrol(txt,'position',[5 top-row*2 600 30],'string',ud.S.path);
+        if ~isempty(ud.ndiSession)
+		    uicontrol(txt,'position',[5 top-row*2 600 30],'string',ud.ndiSession.path);
         else
             uicontrol(txt,'position',[5 top-row*2 600 30],'string','No Session');
         end
@@ -117,42 +133,23 @@ switch command,
 	case 'UpdateBt',
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','UpdateNameRefList');
 	case 'ImportBt',
-		vhintan_importcells(dirstruct(ud.S.path));
+		vhintan_importcells(dirstruct(ud.ndiSession.path));
 	case 'ClusterBt',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		for i=1:length(v),
             % Convert probes to ds/name/ref if needed or update clusternameref to accept probes
-            % For now, pass dirstruct and probe name/ref if possible.
-            % But S.getprobes returns probe objects.
-            % 'clusternameref' expects (ds, name, ref).
-            % We can reconstruct ds from S.path.
-            % What is name/ref for a probe? probe.name and probe.reference?
-            % Assuming probe objects have these properties.
 
             p = ud.probes{v(i)};
             % Assuming probe.name and probe.reference exist or equivalent
-            % If strictly following prompt "use NDI sessions (S)", downstream might need update.
-            % But prompt specifically targeted spikesorting.
-            % I'll try to adapt arguments for clusternameref using probe info.
-            % S.getprobes() returns cell array of probes.
-            % p is a probe object.
-
-            % If p has elementstring(), maybe I can parse it or it has properties.
-            % NDI probes usually have 'name' and 'reference' properties or methods.
-            % Let's assume standard NDI probe structure or check valid properties if I could.
-            % I will assume p.name and p.reference.
 
             % Note: clusternameref expects a dirstruct as first arg.
-            ds = dirstruct(ud.S.path);
+            ds = dirstruct(ud.ndiSession.path);
             vhNDISpikeSorter.clusternameref(ds, p.name, p.reference);
 		end;
 	case 'NameRefList',
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
 	case 'UpdateNameRefList',
-		% ud.ds = dirstruct(getpathname(ud.ds)); % Old
-        % ud.nr = getallnamerefs(ud.ds); % Old
-
-        ud.probes = ud.S.getprobes();
+        ud.probes = ud.ndiSession.getprobes();
 
 		p_string = {};
 		for i=1:numel(ud.probes),
@@ -164,16 +161,15 @@ switch command,
 	case 'ThresholdsBt',
 		prefs = struct2namevaluepair(ud.spikesortingprefs);
         % setthresholds_gui still expects ds.
-        ds = dirstruct(ud.S.path);
+        ds = dirstruct(ud.ndiSession.path);
 		vhNDISpikeSorter.setthresholds_gui('ds',ds,prefs{:});
 	case 'AutoThresholdsBt',
-		prefs = struct2namevaluepair(ud.spikesortingprefs);
-        ds = dirstruct(ud.S.path);
-		vhNDISpikeSorter.autothreshold_all(ds,prefs{:});
+        % Call autothreshold_all with ndiSession and params
+        vhNDISpikeSorter.autothreshold_all(ud.ndiSession, ud.params);
 		msgbox('Auto thresholding completed successfully.');
 	case 'ExtractSelectBt',
 		prefs = struct2namevaluepair(ud.spikesortingprefs);
-		vhNDISpikeSorter.extractselected(ud.S.path,prefs{:});
+		vhNDISpikeSorter.extractselected(ud.ndiSession.path,prefs{:});
 	case 'EnableDisable',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		if isempty(v),
@@ -182,23 +178,59 @@ switch command,
 			set(findobj(fig,'tag','ClusterBt'),'enable','on');
 		end;
 	case 'PreferencesBt',
-		name = 'VHINTAN Spikesorting preferences';
-		prompt = ud.spikesortingprefs_help;
+        % The prompt asks to allow user to edit values and store back to json.
+        % We can reuse the inputdlg mechanism but populate it from ud.params
+
+        % We need to flatten the params structure to show it in inputdlg or create a custom GUI.
+        % The existing mechanism used ud.spikesortingprefs struct.
+        % ud.params has nested structs.
+        % I will create a simplified view or edit specific sections.
+        % For now, I'll focus on 'autothreshold' settings as they are used in AutoThresholdsBt.
+
+        % Let's create a list of editable parameters from ud.params
+        % We can iterate over fields in ud.params.parameters and their subfields.
+
+        p_struct = ud.params.parameters;
+        fields = {'filter', 'autothreshold', 'events', 'process'};
+
+        prompt = {};
+        definput = {};
+        map = {}; % Store mapping to struct fields
+
+        for k=1:length(fields)
+            f = fields{k};
+            subfields = fieldnames(p_struct.(f));
+            for j=1:length(subfields)
+                sf = subfields{j};
+                prompt{end+1} = [f '.' sf];
+                val = p_struct.(f).(sf);
+                if isnumeric(val) || islogical(val)
+                    definput{end+1} = mat2str(val);
+                else
+                    definput{end+1} = char(val);
+                end
+                map{end+1} = struct('field', f, 'subfield', sf);
+            end
+        end
+
+		name = 'VHNDI Spikesorter preferences';
 		numlines = 1;
-		values = {};
-		fn = fieldnames(ud.spikesortingprefs);
-		for i=1:length(fn),
-			values{i} = mat2str(getfield(ud.spikesortingprefs,fn{i}));
-		end;
-		answer = inputdlg(prompt,name,numlines,values);
-		try,
-			if ~isempty(answer),
-				for i=1:length(answer),
-					ud.spikesortingprefs = setfield(ud.spikesortingprefs,fn{i},eval(answer{i}));
-				end;
-			end;
+
+		answer = inputdlg(prompt,name,numlines,definput);
+
+		try
+			if ~isempty(answer)
+				for i=1:length(answer)
+                    f = map{i}.field;
+                    sf = map{i}.subfield;
+                    val = eval(answer{i});
+                    ud.params.parameters.(f).(sf) = val;
+				end
+                % Save back to JSON
+                ud.params.saveToJson();
+			end
 			set(fig,'userdata',ud);
-		catch,
-			errordlg(['Preferences were not updated due to a syntax error: ' lasterr ], 'Preferences update error');
-		end;
+		catch me
+			errordlg(['Preferences were not updated due to a syntax error: ' me.message ], 'Preferences update error');
+		end
 end;
