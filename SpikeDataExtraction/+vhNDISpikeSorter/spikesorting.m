@@ -75,17 +75,20 @@ switch command,
 		% this callback was a nasty puzzle in quotations:
 		callbackstr = [  'eval([get(gcbf,''Tag'') ''(''''command'''','''''' get(gcbo,''Tag'') '''''' ,''''fig'''',gcbf);'']);'];
 
+        figcolor = get(fig, 'Color');
+
 		button.Units = 'pixels';
                 button.BackgroundColor = [0.8 0.8 0.8];
                 button.HorizontalAlignment = 'center';
                 button.Callback = callbackstr;
-                txt.Units = 'pixels'; txt.BackgroundColor = [0.8 0.8 0.8];
+                txt.Units = 'pixels'; txt.BackgroundColor = figcolor;
                 txt.fontsize = 12; txt.fontweight = 'normal';
                 txt.HorizontalAlignment = 'left';txt.Style='text';
                 edit = txt; edit.BackgroundColor = [ 1 1 1]; edit.Style = 'Edit';
                 popup = txt; popup.style = 'popupmenu';
                 popup.Callback = callbackstr;
 		list = txt; list.style = 'list';
+        list.BackgroundColor = [1 1 1];
 		list.Callback = callbackstr;
                 cb = txt; cb.Style = 'Checkbox';
                 cb.Callback = callbackstr;
