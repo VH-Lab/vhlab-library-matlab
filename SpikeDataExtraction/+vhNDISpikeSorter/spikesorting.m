@@ -138,12 +138,21 @@ switch command,
 	case 'UpdateBt',
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','UpdateNameRefList');
 	case 'ImportBt',
-		vhintan_importcells(dirstruct(ud.ndiSession.path));
+		v = get(findobj(fig,'tag','NameRefList'),'value');
+		if isempty(v)
+            msgbox('Please select a probe to import.');
+            return;
+        end
+        for i=1:length(v),
+            p = ud.probes{v(i)};
+            vhNDISpikeSorter.import_sorted_units(ud.ndiSession, p);
+        end
+        msgbox('Import complete.');
 	case 'ClusterBt',
 		v = get(findobj(fig,'tag','NameRefList'),'value');
 		for i=1:length(v),
             p = ud.probes{v(i)};
-            % Call updated clusterprobe
+            % Note: clusternameref now accepts (ndiSession, probe)
             vhNDISpikeSorter.clusterprobe(ud.ndiSession, p);
 		end;
 	case 'NameRefList',
