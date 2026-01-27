@@ -170,7 +170,7 @@ classdef parameters < handle
             p = fullfile(ndiSession.path, 'vhNDISorter');
         end
 
-        function filename = getThresholdLevelFilename(probe, epochID)
+        function filename = getThresholdLevelFilename(probe, epochID, channel)
             % Use elementstring and sanitize
             pName = probe.elementstring();
 
@@ -179,7 +179,7 @@ classdef parameters < handle
             pName(isspace(pName)) = '_';
             pName = replace(pName, '|', '_');
 
-            filename = [pName '_' char(epochID) '.txt'];
+            filename = [pName '_' char(epochID) '_ch' int2str(channel) '.txt'];
         end
 
         function filename = getSpikeWaveformFilename(probe, epochID)
