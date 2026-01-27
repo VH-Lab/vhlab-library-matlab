@@ -1,4 +1,4 @@
-classdef parameters
+classdef parameters < handle
     properties
         settingsFile (1,1) string = ""
 
