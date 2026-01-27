@@ -108,20 +108,15 @@ function autothreshold_epoch(probe, epochID, params)
     % Save to file
     filename = vhNDISpikeSorter.parameters.getThresholdLevelFilename(probe, epochID);
 
-    % Determine full path.
-    % The static method returns just filename. We need path.
-    % Where should it be saved?
-    % "Threshold settings for each epoch will be stored as [probeName ‘_’ epochID ‘.txt’]"
-    % Saved WHERE? In the session directory? In .vhSpikeSorter directory?
-    % The parameters object has settingsFile which is in .vhSpikeSorter.
-    % I will save it in the same directory as settingsFile.
+    % Determine full path using spikeSortingPath
+    settingsDir = vhNDISpikeSorter.parameters.spikeSortingPath(probe.session);
 
-    settingsDir = fileparts(params.spikeSortingParameters.settingsFile);
     if isempty(settingsDir)
-         % Fallback to session path if possible or error
-         % But params doesn't know session path unless we pass it or it was stored.
-         % We can pass session path or assume settingsFile is valid.
-         error('Cannot determine directory to save thresholds. SettingsFile path is empty.');
+         error('Cannot determine directory to save thresholds.');
+    end
+
+    if ~exist(settingsDir, 'dir')
+        mkdir(settingsDir);
     end
 
     fullPath = fullfile(settingsDir, filename);

@@ -61,7 +61,12 @@ if strcmp(command,'Main'),
 
     % Check for preferences file
     if ~isempty(ud.ndiSession)
-        prefsPath = fullfile(ud.ndiSession.path, 'vhNDISorter', 'preferences.json');
+        prefsDir = vhNDISpikeSorter.parameters.spikeSortingPath(ud.ndiSession);
+        if ~exist(prefsDir, 'dir')
+            mkdir(prefsDir);
+        end
+        prefsPath = fullfile(prefsDir, 'preferences.json');
+
         if exist(prefsPath, 'file')
             ud.params = vhNDISpikeSorter.parameters();
             ud.params = ud.params.fromJson(fileread(prefsPath));
@@ -124,7 +129,7 @@ switch command,
 		uicontrol(button,'position',[5 top-row*3 200 30],'string','Auto threshold','tag','AutoThresholdsBt');
 		uicontrol(button,'position',[5 top-row*4 200 30],'string','Set/Edit thresholds/extract','tag','ThresholdsBt');
 		uicontrol(list,'position',[5+210 top-row*3-200+row 200 200],'string',{' ', ' '},'Max',2, 'value',[],'tag','NameRefList');
-		uicontrol(button,'position',[5 top-row*5 200 30],'string','Choose directories to extract','tag','ExtractSelectBt');
+		uicontrol(button,'position',[5 top-row*5 200 30],'string','Choose epochs to extract','tag','ExtractSelectBt');
 		uicontrol(button,'position',[5 top-row*6 200 30],'string','Cluster','tag','ClusterBt');
 		uicontrol(button,'position',[5 top-row*7 200 30],'string','Update','tag','UpdateBt');
 		uicontrol(button,'position',[5 top-row*9 200 30],'string','Import extracted cells','tag','ImportBt');

@@ -119,6 +119,13 @@ classdef parameters
     end
 
     methods (Static)
+        function p = spikeSortingPath(ndiSession)
+            if nargin < 1
+                error('ndiSession argument is required.');
+            end
+            p = fullfile(ndiSession.path, 'vhNDISorter');
+        end
+
         function filename = getThresholdLevelFilename(probe, epochID)
             % probe is likely an object, we need its name?
             % The prompt says "probeName" in the description: [probeName ‘_’ epochID ‘.txt’]
