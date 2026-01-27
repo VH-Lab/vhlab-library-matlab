@@ -14,10 +14,10 @@ function autothreshold_epoch(probe, epochID, params)
     end
 
     % Extract parameters
-    sigma = params.parameters.autothreshold.sigma;
-    readTime = params.parameters.autothreshold.readTime;
-    useMedian = params.parameters.autothreshold.useMedian;
-    medianFilter = params.parameters.filter.medianFilterAcrossChannels;
+    sigma = params.spikeSortingParameters.autothreshold.sigma;
+    readTime = params.spikeSortingParameters.autothreshold.readTime;
+    useMedian = params.spikeSortingParameters.autothreshold.useMedian;
+    medianFilter = params.spikeSortingParameters.filter.medianFilterAcrossChannels;
 
     % Read data
     % Use readTimeSeries. We read 'readTime' amount of data from the beginning (0).
@@ -49,10 +49,10 @@ function autothreshold_epoch(probe, epochID, params)
     end
 
     % Design filter
-    if params.parameters.filter.cheby1Order > 0
-        [B,A] = cheby1(params.parameters.filter.cheby1Order, ...
-                       params.parameters.filter.cheby1Rolloff, ...
-                       params.parameters.filter.cheby1Cutoff / (0.5 * sr), ...
+    if params.spikeSortingParameters.filter.cheby1Order > 0
+        [B,A] = cheby1(params.spikeSortingParameters.filter.cheby1Order, ...
+                       params.spikeSortingParameters.filter.cheby1Rolloff, ...
+                       params.spikeSortingParameters.filter.cheby1Cutoff / (0.5 * sr), ...
                        'high');
         data = filtfilt(B, A, data);
     end
@@ -119,7 +119,7 @@ function autothreshold_epoch(probe, epochID, params)
     % The parameters object has settingsFile which is in .vhSpikeSorter.
     % I will save it in the same directory as settingsFile.
 
-    settingsDir = fileparts(params.parameters.settingsFile);
+    settingsDir = fileparts(params.spikeSortingParameters.settingsFile);
     if isempty(settingsDir)
          % Fallback to session path if possible or error
          % But params doesn't know session path unless we pass it or it was stored.

@@ -1,6 +1,6 @@
 classdef parameters
     properties
-        parameters = struct('settingsFile', "", ...
+        spikeSortingParameters = struct('settingsFile', "", ...
             'filter', struct('cheby1Order', 4, ...
                         'cheby1Rolloff', 0.8, ...
                         'cheby1Cutoff', 300, ...
@@ -37,46 +37,46 @@ classdef parameters
             end
 
             % Update substructures merging with defaults
-            obj.parameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.filter, args.filter);
-            obj.parameters.autothreshold = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.autothreshold, args.autothreshold);
-            obj.parameters.events = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.events, args.events);
-            obj.parameters.process = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.process, args.process);
+            obj.spikeSortingParameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.filter, args.filter);
+            obj.spikeSortingParameters.autothreshold = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.autothreshold, args.autothreshold);
+            obj.spikeSortingParameters.events = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.events, args.events);
+            obj.spikeSortingParameters.process = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.process, args.process);
 
             if args.settingsFile ~= ""
-                obj.parameters.settingsFile = args.settingsFile;
+                obj.spikeSortingParameters.settingsFile = args.settingsFile;
             end
         end
 
         function jsonStr = toJson(obj)
-            % Encode only obj.parameters
-            jsonStr = jsonencode(obj.parameters, 'PrettyPrint', true);
+            % Encode only obj.spikeSortingParameters
+            jsonStr = jsonencode(obj.spikeSortingParameters, 'PrettyPrint', true);
         end
 
         function obj = fromJson(obj, jsonStr)
             data = jsondecode(jsonStr);
 
-            % We expect data to map to fields of obj.parameters
+            % We expect data to map to fields of obj.spikeSortingParameters
             if isfield(data, 'settingsFile')
-                 obj.parameters.settingsFile = data.settingsFile;
+                 obj.spikeSortingParameters.settingsFile = data.settingsFile;
             end
 
             if isfield(data, 'filter')
-                obj.parameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.filter, data.filter);
+                obj.spikeSortingParameters.filter = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.filter, data.filter);
             end
             if isfield(data, 'autothreshold')
-                obj.parameters.autothreshold = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.autothreshold, data.autothreshold);
+                obj.spikeSortingParameters.autothreshold = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.autothreshold, data.autothreshold);
             end
             if isfield(data, 'events')
-                obj.parameters.events = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.events, data.events);
+                obj.spikeSortingParameters.events = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.events, data.events);
             end
             if isfield(data, 'process')
-                obj.parameters.process = vhNDISpikeSorter.parameters.mergeStructs(obj.parameters.process, data.process);
+                obj.spikeSortingParameters.process = vhNDISpikeSorter.parameters.mergeStructs(obj.spikeSortingParameters.process, data.process);
             end
         end
 
         function saveToJson(obj, filename)
             if nargin < 2
-                filename = obj.parameters.settingsFile;
+                filename = obj.spikeSortingParameters.settingsFile;
             end
 
             if filename == ""

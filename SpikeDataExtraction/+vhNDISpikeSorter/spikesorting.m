@@ -65,7 +65,7 @@ if strcmp(command,'Main'),
         if exist(prefsPath, 'file')
             ud.params = vhNDISpikeSorter.parameters();
             ud.params = ud.params.fromJson(fileread(prefsPath));
-            ud.params.parameters.settingsFile = prefsPath; % Ensure path is set
+            ud.params.spikeSortingParameters.settingsFile = prefsPath; % Ensure path is set
         else
             ud.params = vhNDISpikeSorter.parameters('settingsFile', prefsPath);
             ud.params.saveToJson();
@@ -188,9 +188,9 @@ switch command,
         % For now, I'll focus on 'autothreshold' settings as they are used in AutoThresholdsBt.
 
         % Let's create a list of editable parameters from ud.params
-        % We can iterate over fields in ud.params.parameters and their subfields.
+        % We can iterate over fields in ud.params.spikeSortingParameters and their subfields.
 
-        p_struct = ud.params.parameters;
+        p_struct = ud.params.spikeSortingParameters;
         fields = {'filter', 'autothreshold', 'events', 'process'};
 
         prompt = {};
@@ -224,7 +224,7 @@ switch command,
                     f = map{i}.field;
                     sf = map{i}.subfield;
                     val = eval(answer{i});
-                    ud.params.parameters.(f).(sf) = val;
+                    ud.params.spikeSortingParameters.(f).(sf) = val;
 				end
                 % Save back to JSON
                 ud.params.saveToJson();
