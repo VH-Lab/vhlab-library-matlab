@@ -9,7 +9,7 @@ function autothreshold_epoch(probe, epochID, params)
 
     arguments
         probe {mustBeA(probe, 'ndi.probe')}
-        epochID (1,1) string
+        epochID (1,:) char
         params {mustBeA(params, 'vhNDISpikeSorter.parameters')}
     end
 
