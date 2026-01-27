@@ -41,10 +41,8 @@ function autothreshold_epoch(probe, epochID, params)
     % Assuming probe has samplerate(epochID) method or property.
     try
         sr = probe.samplerate(epochID);
-    catch
-        % fallback or error
-        warning('Could not determine sample rate for probe %s epoch %s', probe.name, epochID);
-        return;
+    catch err
+        error('Could not determine sample rate for probe %s epoch %s: %s', probe.name, epochID, err.message);
     end
 
     % Design filter
