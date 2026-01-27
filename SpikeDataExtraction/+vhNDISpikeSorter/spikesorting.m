@@ -164,10 +164,8 @@ switch command,
 		set(fig,'userdata',ud);
 		vhNDISpikeSorter.spikesorting('fig',fig,'command','EnableDisable');
 	case 'ThresholdsBt',
-		prefs = struct2namevaluepair(ud.spikesortingprefs);
-        % setthresholds_gui still expects ds.
-        ds = dirstruct(ud.ndiSession.path);
-		vhNDISpikeSorter.setthresholds_gui('ds',ds,prefs{:});
+        % Call setthresholds_gui with ndiSession and params
+		vhNDISpikeSorter.setthresholds_gui('ndiSession',ud.ndiSession, 'params', ud.params);
 	case 'AutoThresholdsBt',
         % Call autothreshold_all with ndiSession and params
         vhNDISpikeSorter.autothreshold_all(ud.ndiSession, ud.params);

@@ -172,18 +172,7 @@ classdef parameters < handle
 
         function filename = getThresholdLevelFilename(probe, epochID)
             % Use elementstring and sanitize
-            if ischar(probe) || isstring(probe)
-                pName = probe;
-            elseif ismethod(probe, 'elementstring')
-                pName = probe.elementstring();
-            elseif isprop(probe, 'elementstring')
-                pName = probe.elementstring;
-            elseif isprop(probe, 'name')
-                pName = probe.name;
-            else
-                % Fallback or error
-                pName = 'unknown_probe';
-            end
+            pName = probe.elementstring();
 
             % Sanitize pName: replace whitespace and '|'
             pName = char(pName); % Ensure char for manipulation
@@ -194,17 +183,7 @@ classdef parameters < handle
         end
 
         function filename = getSpikeWaveformFilename(probe, epochID)
-             if ischar(probe) || isstring(probe)
-                pName = probe;
-            elseif ismethod(probe, 'elementstring')
-                pName = probe.elementstring();
-            elseif isprop(probe, 'elementstring')
-                pName = probe.elementstring;
-            elseif isprop(probe, 'name')
-                pName = probe.name;
-            else
-                pName = 'unknown_probe';
-            end
+            pName = probe.elementstring();
 
             pName = char(pName);
             pName(isspace(pName)) = '_';
