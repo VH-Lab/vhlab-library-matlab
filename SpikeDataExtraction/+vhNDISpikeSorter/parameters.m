@@ -189,7 +189,17 @@ classdef parameters < handle
             pName(isspace(pName)) = '_';
             pName = replace(pName, '|', '_');
 
-            filename = [pName '_' char(epochID) '.vsw'];
+            filename = ['spikewaveforms_' pName '_' char(epochID) '.vsw'];
+        end
+
+        function filename = getSpikeTimesFilename(probe, epochID)
+            pName = probe.elementstring();
+
+            pName = char(pName);
+            pName(isspace(pName)) = '_';
+            pName = replace(pName, '|', '_');
+
+            filename = ['spiketimes_' pName '_' char(epochID) '.vst'];
         end
 
         function s_out = mergeStructs(s_default, s_new)

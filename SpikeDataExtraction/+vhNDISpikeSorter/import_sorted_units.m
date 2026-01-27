@@ -15,291 +15,148 @@ function import_sorted_units(ndiSession, probe)
         probe {mustBeA(probe, 'ndi.probe')}
     end
 
-    % Define where sorted files are expected
     settingsDir = vhNDISpikeSorter.parameters.spikeSortingPath(ndiSession);
 
-    % Filename pattern for sorted clusters:
-    % 'intan_st_' name '_' ref '_' clusterID '.txt' ??
-    % The previous code in `clusternameref` wrote: `intan_st_name_ref_00M.txt`
-    % With NDI, we need to adapt. Did clusternameref get updated?
-    % I assumed `clusternameref` is legacy.
-    % If we are building a new system, we should look for files created by the clustering step.
-    % If clustering step (manual/auto) creates files based on probe name?
-    % Let's assume the clustering step (which might still be legacy `clusternameref` called from `spikesorting.m`)
-    % uses the old naming convention: `intan_st_PROBENAME_PROBEREF_CLUSTER.txt`.
-    % OR, if we modernized it, maybe `PROBENAME_CLUSTER.txt`.
-    % `spikesorting.m` called `clusternameref` with `p.name`, `p.reference`.
-    % So `clusternameref` likely produces files with `p.name` and `p.reference`.
-    % Pattern: `['intan_st_' name '_' int2str(ref) '_%03d.txt']`
+    pName = probe.elementstring();
+    pName = char(pName); pName(isspace(pName)) = '_'; pName = replace(pName, '|', '_');
 
-    name = probe.name;
-    ref = probe.reference;
+    % Filename pattern: sorted_st_PNAME_EPOCHID_CLUSTER.txt
 
-    % Pattern search
-    filePattern = fullfile(settingsDir, ['intan_st_' name '_' int2str(ref) '_*.txt']);
-    d = dir(filePattern);
+    et = probe.epochtable();
 
-    if isempty(d)
-        warning('No sorted unit files found for probe %s (ref %d) in %s', name, ref, settingsDir);
-        return;
+    % Identify all clusters across all epochs
+    clusterData = containers.Map('KeyType', 'double', 'ValueType', 'any');
+
+    for j = 1:numel(et)
+        epochID = et(j).epoch_id;
+
+        prefix = ['sorted_st_' pName '_' epochID '_'];
+        pat = fullfile(settingsDir, [prefix '*.txt']);
+        files = dir(pat);
+
+        for k = 1:length(files)
+            fname = files(k).name;
+            % Parse cluster ID: suffix .txt
+            cStr = fname(length(prefix)+1 : end-4);
+            cID = str2double(cStr);
+            if isnan(cID), continue; end
+
+            times = load(fullfile(settingsDir, fname), '-ascii');
+
+            % Info file
+            infoPrefix = ['sorted_ci_' pName '_' epochID '_'];
+            infoFile = fullfile(settingsDir, [infoPrefix cStr '.mat']);
+            quality = '';
+            if exist(infoFile, 'file')
+                tmp = load(infoFile);
+                if isfield(tmp, 'clusterinfo') && isfield(tmp.clusterinfo, 'quality_label')
+                    quality = tmp.clusterinfo.quality_label;
+                end
+            end
+
+            if ~isKey(clusterData, cID)
+                clusterData(cID) = struct('epochID', {}, 'times', {}, 'quality', {});
+            end
+            s = clusterData(cID);
+            s(end+1).epochID = epochID;
+            s(end).times = times;
+            s(end).quality = quality;
+            clusterData(cID) = s;
+        end
     end
 
-    % Create or Find Cluster Document?
-    % The example used `jrclust_clusters` doc. We should create `vhNDISpikeSorter_clusters` doc?
-    % Or simply `manual_sorting` doc?
-    % Let's create a document representing this sorting session/parameters.
-    % For simplicity, we might skip the "cluster session" doc if not required by NDI standard,
-    % but linking neurons to a common sorting doc is good practice.
+    % Create neurons
+    keys = clusterData.keys;
+    for k = 1:length(keys)
+        cID = keys{k};
+        dataStruct = clusterData(cID);
 
-    % Assuming we add neurons directly.
+        neuron_name = [pName '_cluster' sprintf('%03d', cID)];
 
-    for i = 1:length(d)
-        filename = d(i).name;
-        % Parse cluster ID
-        % Format: intan_st_NAME_REF_CCC.txt
-        % Pattern regex
-        % prefix: intan_st_NAME_REF_
-        prefix = ['intan_st_' name '_' int2str(ref) '_'];
-        if startsWith(filename, prefix) && endsWith(filename, '.txt')
-            clusterStr = filename(length(prefix)+1 : end-4);
-            clusterID = str2double(clusterStr);
+        % Check if element exists?
+        % We can query session.
+        % For now, attempt creation.
 
-            if isnan(clusterID), continue; end
+        element_neuron = ndi.neuron(ndiSession, neuron_name, probe.reference, 'spikes', probe, 0, [], []);
 
-            % Load spike times
-            fullPath = fullfile(settingsDir, filename);
-            spike_times = load(fullPath, '-ascii');
+        % Document
+        % Use quality from first epoch or consensus?
+        qLabel = '';
+        if ~isempty(dataStruct)
+            qLabel = dataStruct(1).quality;
+        end
 
-            % Load cluster info if available
-            % Pattern: intan_ci_NAME_REF_CCC.mat
-            ci_prefix = ['intan_ci_' name '_' int2str(ref) '_'];
-            ci_file = fullfile(settingsDir, [ci_prefix clusterStr '.mat']);
+        neuron_extracellular = struct();
+        neuron_extracellular.cluster_index = cID;
+        neuron_extracellular.quality_label = qLabel;
 
-            quality = '';
-            if exist(ci_file, 'file')
-                ci_data = load(ci_file);
-                if isfield(ci_data, 'clusterinfo') && isfield(ci_data.clusterinfo, 'quality_label')
-                    quality = ci_data.clusterinfo.quality_label;
-                end
-            end
+        % Read waveforms? Prompt: "Update the importing method so it reads the waveforms from these locations, too"
+        % "from these locations" -> getSpikeWaveformFilename.
+        % But that file has ALL spikes. We need spikes for THIS unit.
+        % We have times. We can map times to indices?
+        % Or we need to look up waveforms corresponding to `times`.
+        % `extractwaveforms` saves times in `.vst`.
+        % We can find indices of `times` in `.vst`.
+        % Then read corresponding waveforms from `.vsw`.
+        % AND compute mean waveform.
 
-            % Create NDI Neuron Element
-            % ndi.element.neuron?
-            % element_neuron = ndi.neuron(S, [E.name '_' int2str(clusters_to_output(i))], E.reference, 'spikes', E, 0, [], dependency);
-            % E is the probe.
+        all_waveforms = [];
 
-            % We need to link it to the probe.
-            % New neuron name: ProbeName_ClusterID
-            neuron_name = [name '_' clusterStr];
+        for m = 1:length(dataStruct)
+            eID = dataStruct(m).epochID;
+            ts = dataStruct(m).times;
 
-            % Add element to session
-            % Note: ndi.neuron constructor signature might vary.
-            % Based on example: `element_neuron = ndi.neuron(S, name, reference, type, source, ...)`
-            % Here type is 'spikes'? Or just use `ndi.element`?
-            % Example uses `ndi.neuron`.
+            % Load all times for this epoch
+            tFile = fullfile(settingsDir, vhNDISpikeSorter.parameters.getSpikeTimesFilename(probe, eID));
+            wFile = fullfile(settingsDir, vhNDISpikeSorter.parameters.getSpikeWaveformFilename(probe, eID));
 
-            % Need a reference. Usually incremental or unique.
-            % Probe reference is `ref`. Neuron reference?
-            % Maybe we assign a unique reference. Or use clusterID if unique per probe.
-            % Example uses `E.reference` (probe reference). But multiple neurons on same probe?
-            % NDI element references should be unique for the type?
-            % Let's use clusterID as reference offset or similar if allowed, or just string.
-            % Actually, NDI neurons are usually distinct elements.
-            % I will try to create `ndi.element.timeseries.neuron` if it exists, or `ndi.neuron`.
+            if exist(tFile, 'file') && exist(wFile, 'file')
+                fid = fopen(tFile, 'r', 'ieee-le');
+                all_ts = fread(fid, 'float64');
+                fclose(fid);
 
-            % Assuming `ndi.neuron` exists as per example.
+                % Find indices (approx match due to float?)
+                % Using ismembertol?
+                [L, locs] = ismembertol(ts, all_ts, 1e-6); % Tolerance?
+                indices = locs(L);
 
-            neuronObj = ndi.neuron(ndiSession, neuron_name, ref, 'spikes', probe, 0, [], []);
+                if ~isempty(indices)
+                    % Read waveforms
+                    % vhlspikewaveformfile allows reading specific indices?
+                    % `readvhlspikewaveformfile` reads all usually.
+                    % If file is large, reading all is slow.
+                    % Assuming `readvhlspikewaveformfile` has standard read.
+                    [w_epoch, h] = readvhlspikewaveformfile(wFile);
+                    % w_epoch is S x C x N
+                    w_unit = w_epoch(:, :, indices);
 
-            % Add epochs
-            % We have spike times. But they are usually concatenated or need mapping to epochs.
-            % `clusternameref` usually worked on concatenated data or had `EpochStartSamples`.
-            % The output `intan_st` file contains spike times. Are they global or local?
-            % In `clusternameref`, it loops over directories and writes times:
-            % `timeshere = times(dirinds_here(clusterinds));`
-            % `dlmwrite([dirname filesep ...], timeshere ...)`
-            % It wrote files to EACH directory (epoch).
-            % Wait, my `d = dir(filePattern)` looked in `settingsDir`.
-            % If `clusternameref` saves to `dirname` (epoch directory), then `settingsDir` (centralized) won't have them?
-            % OR, did we change `clusternameref`? We didn't change `clusternameref` logic to use `settingsDir`.
-            % `clusternameref` in `spikesorting.m` was called with `ds` (dirstruct).
-            % It uses `gettests(ds,...)` to find directories.
-            % It writes to `[dirname filesep fname_prefix ... .txt]`.
-            % So files are distributed in epoch directories!
-
-            % So `import_sorted_units` needs to look in epoch directories?
-            % Or `spikeSortingPath`?
-            % If we want to support `clusternameref` as is, we must look in epoch directories.
-            % But `vhNDISpikeSorter` aims to centralize?
-            % The prompt "The waveforms should be saved in the file returned in the static call...". This was for `extractwaveforms`.
-            % `clusternameref` reads `.vsw` files.
-            % If `extractwaveforms` saves to `spikeSortingPath`, then `clusternameref` needs to read from there.
-            % If `clusternameref` is not refactored, it looks in `[dirname filesep ... .vsw]`.
-            % `extractwaveforms` saves to `settingsDir` (central).
-            % So `clusternameref` WILL FAIL if not updated.
-            % However, the prompt didn't ask to refactor `clusternameref`. It asked to refactor `extractwaveforms` and `extractselected`.
-            % And "The import extracted waveforms should do an import routine...".
-            % Maybe "import extracted waveforms" implies importing the *waveforms* themselves into NDI?
-            % "Make a spiking element and add the spike times and some of the clustering information." -> This implies sorted units.
-
-            % Issue: `extractwaveforms` logic changed location of `.vsw` files.
-            % `clusternameref` (legacy) expects them in epoch dirs.
-            % `import` (new) expects sorted units.
-            % We have a disconnect. The sorting step (`clusternameref`) needs to be bridged.
-            % Assuming I should fix `import` to look where `clusternameref` *would* write if it worked, OR `import` handles what we have.
-
-            % If `clusternameref` is legacy, maybe `import` reads the legacy output from epoch dirs?
-            % If so, I need to iterate epochs of the probe.
-
-            % Let's iterate probe epochs.
-            et = probe.epochtable();
-
-            % We need to find "Neuron 1", "Neuron 2" across all epochs.
-            % `clusternameref` writes `intan_st_..._001.txt` in each epoch dir if spike present.
-            % So we must scan all epochs to find all Cluster IDs.
-
-            clusterIDs = [];
-            % Map: ClusterID -> Struct(EpochID -> Times)
-            clusterData = containers.Map('KeyType', 'double', 'ValueType', 'any');
-
-            for j = 1:numel(et)
-                epochID = et(j).epoch_id;
-                % Epoch directory?
-                % `probe` has session. `ndiSession` has path.
-                % NDI epochs might not be flat directories.
-                % But `clusternameref` relies on `dirstruct`.
-                % If `dirstruct(ndiSession.path)` works, then epochs correspond to directories.
-                % Let's assume standard file mapping.
-                % We can get epoch path? `probe.session.getepochpath(epochID)`? (Hypothetical)
-                % Or assume `fullfile(ndiSession.path, epochID)`.
-
-                % Actually, `clusternameref` used `gettests` from `dirstruct`.
-                % If we want `import` to work with `clusternameref` output, we assume `clusternameref` wrote to `fullfile(ndiSession.path, epochID)`.
-
-                epochDir = fullfile(ndiSession.path, epochID); % Simple assumption
-
-                % Look for `intan_st_NAME_REF_*.txt` in `epochDir`
-                pat = fullfile(epochDir, ['intan_st_' name '_' int2str(ref) '_*.txt']);
-                files = dir(pat);
-
-                for k = 1:length(files)
-                    fname = files(k).name;
-                    % Parse ID
-                    prefix = ['intan_st_' name '_' int2str(ref) '_'];
-                    cStr = fname(length(prefix)+1 : end-4);
-                    cID = str2double(cStr);
-                    if isnan(cID), continue; end
-
-                    times = load(fullfile(epochDir, fname), '-ascii');
-
-                    if ~isKey(clusterData, cID)
-                        clusterData(cID) = struct('epochID', {}, 'times', {});
+                    if isempty(all_waveforms)
+                        all_waveforms = w_unit;
+                    else
+                        all_waveforms = cat(3, all_waveforms, w_unit);
                     end
-                    s = clusterData(cID);
-                    s(end+1).epochID = epochID;
-                    s(end).times = times;
-                    clusterData(cID) = s;
                 end
             end
+        end
 
-            % Now create neurons for each found ClusterID
-            keys = clusterData.keys;
-            for k = 1:length(keys)
-                cID = keys{k};
-                dataStruct = clusterData(cID);
+        mean_wave = [];
+        if ~isempty(all_waveforms)
+            mean_wave = mean(all_waveforms, 3);
+        end
 
-                neuron_name = [name '_' sprintf('%03d', cID)];
+        neuron_extracellular.mean_waveform = mean_wave;
 
-                % Create NDI neuron
-                neuronObj = ndi.neuron(ndiSession, neuron_name, ref, 'spikes', probe, 0, [], []);
+        neuron_doc = ndi.document('neuron_extracellular', ...
+            'neuron_extracellular', neuron_extracellular, ...
+            'base.session_id', ndiSession.id());
+        neuron_doc = neuron_doc.set_dependency_value('element_id', element_neuron.id());
+        ndiSession.database_add(neuron_doc);
 
-                % Add epochs
-                for m = 1:length(dataStruct)
-                    eID = dataStruct(m).epochID;
-                    ts = dataStruct(m).times;
-
-                    % We need to know t0_t1 for the epoch to add it correctly?
-                    % `addepoch(epochID, clocktype, t0_t1, times, ...)`
-                    % t0_t1 usually [0 duration].
-                    % times are relative to start?
-
-                    % `addepoch` signature: `addepoch(epochid, clocktype, t0_t1, times, values)`
-                    % We assume `ts` are seconds from start of epoch.
-                    % t0_t1 can be retrieved from probe?
-                    % `probe.epochtable` has duration?
-                    % Or just use [0 Inf] or retrieve.
-
-                    % `addepoch` logic
-                    neuronObj.addepoch(eID, ndi.time.clocktype('dev_local_time'), ...
-                        [0 Inf], ts(:), ones(size(ts(:))));
-                end
-
-                % Add to database? `ndi.neuron` usually adds itself or we need `ndiSession.database_add`?
-                % The example used `S.database_add(neuron_doc)`.
-                % `ndi.neuron` creates a document?
-                % `element_neuron = ndi.neuron(...)`. This is an object.
-                % Does it save automatically?
-                % Usually `ndi.neuron` is an element object that reads from docs.
-                % Creating it might imply it exists or we define it.
-                % The example explicitly created `neuron_doc` and added it.
-
-                % "Basically, you need to make a spiking element and add the spike times and some of the clustering information."
-                % Creating `ndi.neuron` object is one thing. Persisting it is another.
-                % The example code manually built `neuron_extracellular` structure and added a document.
-                % `ndi.neuron` class likely reads this document.
-
-                % I will follow the example pattern: Create document.
-
-                neuron_extracellular = struct();
-                neuron_extracellular.cluster_index = cID;
-                neuron_extracellular.quality_label = 'imported'; % Placeholder
-
-                % Create document
-                neuron_doc = ndi.document('neuron_extracellular', ...
-                    'neuron_extracellular', neuron_extracellular, ...
-                    'base.session_id', ndiSession.id());
-
-                % Dependency on probe?
-                % `neuron_doc = neuron_doc.set_dependency_value('element_id', ...)`
-                % The example set dependency on `element_neuron.id()`. Wait.
-                % `element_neuron` was created first.
-                % `element_neuron` is likely the "Element" wrapper.
-
-                % I will try to replicate the example flow.
-
-                % 1. Create neuron object (Element wrapper)
-                % element_neuron = ndi.neuron(S, name, ref, type, source, ...)
-                % If `ndi.neuron` constructor creates the `ndi_element` document, we are good.
-                % If not, we might need to do more.
-                % BUT, `ndi.neuron` is likely a reader.
-                % The example:
-                % `element_neuron = ndi.neuron(...)`
-                % `neuron_doc = ndi.document('neuron_extracellular', ...)`
-                % `neuron_doc = neuron_doc.set_dependency_value('element_id', element_neuron.id())`
-                % `S.database_add(neuron_doc)`
-
-                % This suggests `element_neuron` IS the handle to the element, and we attach data (neuron_extracellular) to it via dependency.
-                % AND we add epochs to `element_neuron`.
-
-                % `element_neuron.addepoch` likely adds epoch records.
-
-                % So:
-                element_neuron = ndi.neuron(ndiSession, neuron_name, ref, 'spikes', probe, 0, [], []);
-
-                % Create doc
-                neuron_doc = ndi.document('neuron_extracellular', ...
-                    'neuron_extracellular', neuron_extracellular, ...
-                    'base.session_id', ndiSession.id());
-                neuron_doc = neuron_doc.set_dependency_value('element_id', element_neuron.id());
-                ndiSession.database_add(neuron_doc);
-
-                % Add epochs
-                for m = 1:length(dataStruct)
-                    eID = dataStruct(m).epochID;
-                    ts = dataStruct(m).times;
-                    element_neuron.addepoch(eID, ndi.time.clocktype('dev_local_time'), ...
-                        [0 Inf], ts(:), ones(size(ts(:))));
-                end
-            end
+        for m = 1:length(dataStruct)
+            eID = dataStruct(m).epochID;
+            ts = dataStruct(m).times;
+            element_neuron.addepoch(eID, ndi.time.clocktype('dev_local_time'), ...
+                [0 Inf], ts(:), ones(size(ts(:))));
+        end
     end
 end
