@@ -59,11 +59,20 @@ function import_sorted_units(ndiSession, probe)
             
             if exist(infoFullPath, 'file')
                 tmp = load(infoFullPath);
-                if isfield(tmp, 'clusterinfo') && isfield(tmp.clusterinfo, 'quality_label')
-                    quality = tmp.clusterinfo.quality_label;
+                if isfield(tmp, 'clusterinfo')
+                    if isfield(tmp.clusterinfo, 'quality_label')
+                        quality = tmp.clusterinfo.quality_label;
+                    elseif isfield(tmp.clusterinfo, 'qualitylabel')
+                        quality = tmp.clusterinfo.qualitylabel;
+                    end
                 end
             end
             
+            % Skip if quality is 'not usable' or 'garbage'
+            if strcmpi(quality, 'not usable') || strcmpi(quality, 'garbage')
+                continue;
+            end
+
             if ~isKey(clusterData, cID)
                 clusterData(cID) = struct('epochID', {}, 'times', {}, 'quality', {});
             end
@@ -97,6 +106,7 @@ function import_sorted_units(ndiSession, probe)
         neuron_extracellular.quality_label = qLabel;
         
         all_waveforms = [];
+        h_struct = [];
         
         for m = 1:length(dataStruct)
             eID = dataStruct(m).epochID;
@@ -116,6 +126,8 @@ function import_sorted_units(ndiSession, probe)
                 
                 if ~isempty(indices)
                     [w_epoch, h] = readvhlspikewaveformfile(wFile);
+                    if isempty(h_struct), h_struct = h; end
+
                     % w_epoch is S x C x N
                     w_unit = w_epoch(:, :, indices);
                     
@@ -135,6 +147,47 @@ function import_sorted_units(ndiSession, probe)
         
         neuron_extracellular.mean_waveform = mean_wave;
         
+        if ~isempty(mean_wave)
+            neuron_extracellular.number_of_channels = size(mean_wave, 2);
+            neuron_extracellular.number_of_samples_per_channel = size(mean_wave, 1);
+        else
+            neuron_extracellular.number_of_channels = 0;
+            neuron_extracellular.number_of_samples_per_channel = 0;
+        end
+
+        % Quality number mapping
+        % Using integer scale: Excellent=4, Good=3, Fair=2, Poor=1, Multi=0, Unselected=0, Garbage=-1
+        quality_map = containers.Map({'excellent', 'good', 'fair', 'poor', 'multi', 'garbage', 'multi-unit', 'unselected', 'not usable'}, ...
+            {4, 3, 2, 1, 0, -1, 0, 0, -1});
+
+        qNum = 0; % Default
+        if ~isempty(qLabel)
+             lowQ = lower(qLabel);
+             if isKey(quality_map, lowQ)
+                 qNum = quality_map(lowQ);
+             end
+        end
+        neuron_extracellular.quality_number = int8(qNum);
+
+        % Waveform sample times
+        sr = 20000; % Default fallback
+        if ~isempty(h_struct)
+            if isfield(h_struct, 'samplerate')
+                sr = h_struct.samplerate;
+            elseif isfield(h_struct, 'sampling_rate')
+                sr = h_struct.sampling_rate;
+            elseif isfield(h_struct, 'frequency')
+                sr = h_struct.frequency;
+            end
+        end
+
+        num_samples = neuron_extracellular.number_of_samples_per_channel;
+        if num_samples > 0
+            neuron_extracellular.waveform_sample_times = (0:num_samples-1) / sr;
+        else
+            neuron_extracellular.waveform_sample_times = [];
+        end
+
         neuron_doc = ndi.document('neuron_extracellular', ...
             'neuron_extracellular', neuron_extracellular, ...
             'base.session_id', ndiSession.id());
